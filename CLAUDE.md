@@ -80,8 +80,18 @@ src-tauri/target/release/rstodo  # または Windows では .exe、macOS では 
 ## コミットガイドライン
 
 - コミットメッセージは英語で記述
-- メッセージ本体はダッシュ/ハイフンで始まる（例: `- Add priority to tasks`）
-- コミットメッセージに `Co-Authored-By` または Claude 帰属行を含めない
+- プレフィックスを使用: `type: subject`（例: `feat: add task priority`）
+  - `feat`: 新機能
+  - `fix`: バグ修正
+  - `docs`: ドキュメント変更
+  - `style`: コード形式・フォーマット（構造に影響しない）
+  - `refactor`: コード リファクタリング
+  - `test`: テスト追加・修正
+  - `chore`: ビルド、依存関係、設定など
+  - `ci`: CI/CD パイプライン関連
+  - `perf`: パフォーマンス改善
+- メッセージ本体はダッシュで始まる（例: `- Implement priority sorting`）
+- コミットメッセージに帰属行を含めない
 
 ### Git 設定
 
