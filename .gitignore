@@ -19,3 +19,20 @@ target
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# Node
+node_modules
+dist
+dist-ssr
+*.local
+npm-debug.log*
+
+# coverage
+coverage/
+tarpaulin-report.html
+
+# doc
+/docs/
+
+# Claude Code のローカル設定
+.claude/settings.local.json
