@@ -1,8 +1,8 @@
 # TODO
 
-## クラウド同期 (Google Drive) と Android アプリ
+## クラウド同期 (Google Drive) と Android / iOS アプリ
 
-結論: **できる**。Tauri v2 は Android に対応していて (`tauri android`)、フロントエンド (React) とバックエンド (Rust) は、ほぼそのまま使える。データは Google Drive の API で同期する。ただし、次の 3 つに、まとまった作業がある。
+結論: **できる**。Tauri v2 は Android (`tauri android`) と iOS (`tauri ios`) に対応していて、フロントエンド (React) とバックエンド (Rust) は、ほぼそのまま使える。データは Google Drive の API で同期する。ただし、次の 3 つに、まとまった作業がある。
 
 1. 同期のためのデータ設計 (競合の解決)。
 2. Google の認証 (OAuth)。デスクトップと Android で、方式が違う。
@@ -59,21 +59,56 @@
 - [ ] CI (`release.yml`): Android のビルド (`tauri android build`) を足す。成果物は APK / AAB。Google Play に出さない場合は、APK を GitHub Releases に付けて、手で入れる (サイドロード)
 - [ ] 実機・エミュレータでの試験項目を、`INTEGRATION_TESTS.md` に足す (今は無い。作る)
 
+### iOS アプリ
+
+Android より後にする。同期とマージが Android で動いてから、同じ設計を使う。
+
+- [ ] **ビルドには macOS が必須** (Xcode が Mac でしか動かない)。CI は `macos-latest` を使う。この開発環境 (Linux) では、ビルドも動作確認もできない。Mac の実機で確かめる
+- [ ] `npm run tauri ios init` で、Xcode のプロジェクトを生成する。Rust のターゲット: `aarch64-apple-ios` (実機)・`aarch64-apple-ios-sim` (シミュレータ)
+- [ ] Apple の登録: 実機で試すだけなら、Apple ID (無料) で足りるが、署名が 7 日で切れる。長く使う・TestFlight / App Store で配布するには、Apple Developer Program (年 99 ドル) が要る。**Android の APK のように、ファイルを渡して入れてもらうことは、基本的にできない**
+- [ ] 署名: 証明書とプロビジョニングプロファイルを用意する。CI では、シークレットに置く (リポジトリには入れない)
+- [ ] データの置き場所: Android と同じく、Tauri のパス API (`app.path().app_data_dir()`) を使う
+- [ ] 日報・週報の保存: 共有シート (Share) か、ファイルアプリへの保存にする
+- [ ] Google ログイン: iOS 用の OAuth クライアント (バンドル ID を登録) を作り、カスタム URL スキームでリダイレクトする (`tauri-plugin-deep-link`)。トークンは Keychain に置く
+- [ ] 画面は、Android 用の 1 列のレイアウトを使う。WKWebView (Safari と同じ描画エンジン) なので、`<input type="date">` の見た目や、セーフエリア (ノッチ・ホームバー) を、実機で確かめる
+- [ ] App Store の審査: プライバシーの説明 (Google Drive にタスクを保存する旨)、スクリーンショット、アプリ名・アイコンが要る
+- [ ] `release.yml` に、iOS のビルド (`tauri ios build`) を足す。成果物は `.ipa`。TestFlight へのアップロードは、`xcrun altool` / Fastlane などで行う
+
 ### 進める順序 (提案)
 
 1. **データ設計** (`updated_at`・墓石・マージ関数)。ここは、同期が無くても、先に入れられる。テストしやすい。
 2. **Android でローカルだけ動かす** (データの置き場所、1 列の画面、ビルド)。同期なしでも、アプリとして使える。
 3. **デスクトップで Google ログイン + 同期** (ループバックは、扱いやすい)。
 4. **Android でログイン + 同期**。
-5. 仕上げ (状態表示、リフレッシュトークンの更新、再ログイン、署名、CI)。
+5. **iOS** (Android と同じ設計を使う)。
+6. 仕上げ (状態表示、リフレッシュトークンの更新、再ログイン、署名、CI)。
 
 ### 注意・リスク
 
-- **Android は、これまで一度も、ビルドしていない**。Tauri の Android 対応は、デスクトップより新しい。プラグインの対応状況を、最初に確かめる。
+- **Android と iOS は、これまで一度も、ビルドしていない**。Tauri の Android 対応は、デスクトップより新しい。プラグインの対応状況を、最初に確かめる。
 - **競合の解決は、完全ではない**。同じタスクを、2 台でほぼ同時に編集すると、新しい方だけが残る (項目単位)。メモの文章を、文字単位でマージすることまではしない。
 - **Google の仕様変更**: OAuth の方式と、審査の条件は、変わることがある。着手する前に、最新の公式文書を確かめる。
 - **個人情報**: タスクの内容が、Google のサーバーに置かれる。README にも、書いておく。
-- 費用は、かからない (Drive の無料の範囲、Drive API は無料)。Google Play に出す場合のみ、登録料 (25 ドル、1 回) が要る。
+- 費用は、Drive の利用 (無料の範囲、Drive API は無料) では、かからない。ストアに出す場合のみ、登録料が要る (Google Play: 25 ドル、1 回。Apple Developer Program: 年 99 ドル)。
+
+## 配布
+
+### デスクトップ版
+
+方針: **GitHub Releases で配る**。CI の Artifact (Actions の成果物) は、保存期間が限られ (既定 90 日)、ログインしないと取れないので、利用者向けの配布には使わない。
+
+- [x] `v*` タグの push で、`release.yml` が、3 OS 向けにビルドして、GitHub Releases に**ドラフト**を作る (済み)
+- [ ] ドラフトを確認して、手動で「公開」する運用にする。リリースノート (変更点) を書く
+- [ ] ファイル名に、OS と形式が分かる名前を付ける (例: `rstodo_0.1.0_windows_x64.msi`, `..._macos_universal.dmg`, `..._linux_amd64.AppImage`)
+- [ ] ダウンロード用のページ (GitHub Pages、任意): 今 Pages には、API ドキュメント (typedoc / cargo doc) を公開している。同じサイトに、「ダウンロード」のページを足して、`https://github.com/<owner>/rs-todo/releases/latest` へのリンクと、OS ごとの案内を置く。**インストーラの実体は、Pages には置かず、Releases に置く** (Pages には、サイズと帯域の制限がある)
+- [ ] 署名: 署名していないと、OS が警告を出す。**macOS**: Apple Developer ID の署名と公証 (notarization) が要る (年 99 ドル)。しないと「壊れている」と表示され、右クリックから開く必要がある。**Windows**: コード署名証明書 (有料) が無いと、SmartScreen が警告を出す (使われるうちに、警告は減る)。**Linux**: 署名は不要 (AppImage / deb / rpm)
+- [ ] 自動更新 (任意): `tauri-plugin-updater` を使う。更新用の署名鍵 (OS の署名とは別) を作り、秘密鍵は、GitHub のシークレットに置く。`tauri-action` が、`latest.json` を Releases に付ける。アプリが、それを見て、更新を知らせる
+- [ ] パッケージマネージャー (任意): Windows の winget / Scoop、macOS の Homebrew Cask。リリースごとの更新が、必要になる
+
+### モバイル版
+
+- Android: APK を Releases に付けて、手で入れる (サイドロード)。または、Google Play に出す
+- iOS: TestFlight / App Store (サイドロードは、基本的にできない)
 
 ## そのほか
 
