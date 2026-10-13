@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import DateInput from "../../../components/DateInput";
 import type { Task } from "../types";
 
 /** `TaskDetail` の props. */
@@ -36,38 +37,38 @@ export default function TaskDetail({
       </button>
       <label className="detail-row">
         <span>▷ 予定日</span>
-        <input
+        <DateInput
           type="date"
-          aria-label="予定日"
+          label="予定日"
           value={task.planned_date ?? ""}
-          onChange={(e) => onUpdate({ planned_date: e.target.value || null })}
+          onChange={(v) => onUpdate({ planned_date: v || null })}
         />
       </label>
       <label className="detail-row">
         <span>▶ 着手日</span>
-        <input
+        <DateInput
           type="date"
-          aria-label="着手日"
+          label="着手日"
           value={task.start_date ?? ""}
-          onChange={(e) => onUpdate({ start_date: e.target.value || null })}
+          onChange={(v) => onUpdate({ start_date: v || null })}
         />
       </label>
       <label className="detail-row">
         <span>▦ 期限</span>
-        <input
+        <DateInput
           type="date"
-          aria-label="期限"
+          label="期限"
           value={task.due_date ?? ""}
-          onChange={(e) => onUpdate({ due_date: e.target.value || null })}
+          onChange={(v) => onUpdate({ due_date: v || null })}
         />
       </label>
       <label className="detail-row">
         <span>✓ 完了日</span>
-        <input
+        <DateInput
           type="datetime-local"
-          aria-label="完了日"
+          label="完了日"
           value={task.completed_at ?? ""}
-          onChange={(e) => onUpdate({ completed_at: e.target.value || null })}
+          onChange={(v) => onUpdate({ completed_at: v || null })}
         />
       </label>
       <textarea
