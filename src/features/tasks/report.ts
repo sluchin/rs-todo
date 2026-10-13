@@ -99,3 +99,119 @@ export function buildDailyReport(data: TodoData, date: string): string {
     "",
   ].join("\n");
 }
+
+/**
+ * 日付を含む週の, 最初の日 (月曜) と最後の日 (日曜) を返します.
+ *
+ * @param date - 週に含まれる日付 (`YYYY-MM-DD`).
+ * @returns 週の最初の日と最後の日 (どちらも `YYYY-MM-DD`).
+ */
+export function weekRange(date: string): { start: string; end: string } {
+  const [y, m, d] = date.split("-").map(Number);
+  const offset = (new Date(y, m - 1, d).getDay() + 6) % 7;
+  const start = addDays(date, -offset);
+  return { start, end: addDays(start, 6) };
+}
+
+/** 日付が範囲 (両端を含む) に入るか. 日付が無ければ `false`. */
+function inRange(
+  date: string | null | undefined,
+  start: string,
+  end: string,
+): boolean {
+  return !!date && date >= start && date <= end;
+}
+
+/**
+ * 指定した日を含む週 (月曜から日曜) の週報を, Markdown で作ります.
+ *
+ * 内容は次のとおりです.
+ * - 完了したタスク: 週の中で完了したもの. 完了日ごとに分けて出す.
+ * - 着手したタスク: 着手日が週の中にあるもの.
+ * - 未完了のタスク: 期限か予定日が週の中にある, 未完了のもの.
+ * - 期限切れのタスク: 期限が週の前にある, 未完了のもの.
+ * - 来週の予定: 期限か予定日が来週にある, 未完了のもの.
+ *
+ * @param data - タスクとリスト.
+ * @param date - 週に含まれる日付 (`YYYY-MM-DD`).
+ * @returns 週報の本文.
+ */
+export function buildWeeklyReport(data: TodoData, date: string): string {
+  const { start, end } = weekRange(date);
+  const next = weekRange(addDays(end, 1));
+  const names = new Map(allLists(data.lists).map((l) => [l.id, l.name]));
+  const nameOf = (t: Task): string => names.get(t.list_id) ?? t.list_id;
+  const line = (t: Task, prefix: string): string[] =>
+    taskLines(t, nameOf(t), prefix);
+  const byDue = (a: Task, b: Task): number =>
+    String(a.due_date).localeCompare(String(b.due_date));
+
+  const open = data.tasks.filter((t) => !t.completed);
+  const inWeek = (t: Task, from: string, to: string): boolean =>
+    inRange(t.due_date, from, to) || inRange(t.planned_date, from, to);
+  const done = data.tasks
+    .filter(
+      (t) => t.completed && inRange(t.completed_at?.slice(0, 10), start, end),
+    )
+    .sort((a, b) =>
+      String(a.completed_at).localeCompare(String(b.completed_at)),
+    );
+  const started = data.tasks
+    .filter((t) => inRange(t.start_date, start, end))
+    .sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)));
+  const thisWeek = open.filter((t) => inWeek(t, start, end)).sort(byDue);
+  const overdue = open
+    .filter((t) => t.due_date !== null && t.due_date < start)
+    .sort(byDue);
+  const nextWeek = open
+    .filter((t) => inWeek(t, next.start, next.end))
+    .sort(byDue);
+
+  const section = (title: string, tasks: Task[], lines: string[]): string[] => [
+    "",
+    `## ${title} (${tasks.length})`,
+    ...(tasks.length === 0 ? ["- なし"] : lines),
+  ];
+
+  const doneLines: string[] = [];
+  let currentDay = "";
+  for (const t of done) {
+    const day = String(t.completed_at).slice(0, 10);
+    if (day !== currentDay) {
+      currentDay = day;
+      const [y, m, d] = day.split("-").map(Number);
+      doneLines.push(
+        `### ${day} (${WEEKDAYS[new Date(y, m - 1, d).getDay()]})`,
+      );
+    }
+    doneLines.push(...line(t, `[x] ${String(t.completed_at).slice(11, 16)} `));
+  }
+
+  return [
+    `# 週報 ${start} 〜 ${end}`,
+    ...section("完了したタスク", done, doneLines),
+    ...section(
+      "着手したタスク",
+      started,
+      started.flatMap((t) =>
+        line(t, `${t.completed ? "[x]" : "[ ]"} ${t.start_date} `),
+      ),
+    ),
+    ...section(
+      "未完了のタスク",
+      thisWeek,
+      thisWeek.flatMap((t) => line(t, "[ ] ")),
+    ),
+    ...section(
+      "期限切れのタスク",
+      overdue,
+      overdue.flatMap((t) => line(t, "[ ] ")),
+    ),
+    ...section(
+      "来週の予定",
+      nextWeek,
+      nextWeek.flatMap((t) => line(t, "[ ] ")),
+    ),
+    "",
+  ].join("\n");
+}
