@@ -22,6 +22,18 @@ pub struct Subtask {
     /// 完了しているか.
     #[serde(default)]
     pub completed: bool,
+    /// 予定日 (`YYYY-MM-DD`). 未設定なら `None`.
+    #[serde(default)]
+    pub planned_date: Option<String>,
+    /// 着手日 (`YYYY-MM-DD`). 未設定なら `None`.
+    #[serde(default)]
+    pub start_date: Option<String>,
+    /// 期限 (`YYYY-MM-DD`). 未設定なら `None`.
+    #[serde(default)]
+    pub due_date: Option<String>,
+    /// 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未設定なら `None`. 完了を解除しても残す.
+    #[serde(default)]
+    pub completed_at: Option<String>,
 }
 
 /// 1 つのタスク.
@@ -207,6 +219,10 @@ mod tests {
                     id: "s1".into(),
                     title: "レジに並ぶ".into(),
                     completed: true,
+                    planned_date: Some("2026-01-02".into()),
+                    start_date: None,
+                    due_date: Some("2026-01-03".into()),
+                    completed_at: Some("2026-01-03T09:00".into()),
                 }],
                 completed_at: Some("2026-01-03T09:30".into()),
                 list_id: "list-1".into(),
@@ -283,6 +299,23 @@ mod tests {
         assert_eq!(data.tasks[0].planned_date, None);
         assert_eq!(data.tasks[0].start_date, None);
         assert!(data.tasks[0].subtasks.is_empty());
+    }
+
+    #[test]
+    fn test_read_data_subtask_defaults_missing_fields() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("todo.json");
+        fs::write(
+            &path,
+            r#"{"tasks":[{"id":"a","title":"t","list_id":"tasks","subtasks":[{"id":"s","title":"u"}]}]}"#,
+        )
+        .unwrap();
+        let sub = &read_data(&path).unwrap().tasks[0].subtasks[0];
+        assert!(!sub.completed);
+        assert_eq!(sub.planned_date, None);
+        assert_eq!(sub.start_date, None);
+        assert_eq!(sub.due_date, None);
+        assert_eq!(sub.completed_at, None);
     }
 
     #[test]

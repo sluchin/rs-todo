@@ -355,9 +355,27 @@ describe("removeList", () => {
 });
 
 describe("サブタスク", () => {
+  it("正常系: サブタスクの完了も、タスクと同じ規則 (空なら記録、入っていれば保持、解除しても残す)", () => {
+    const s = newSubtask("a");
+    expect(toggleCompletedPatch(s, NOW)).toEqual({
+      completed: true,
+      completed_at: "2026-01-05T09:00",
+    });
+    expect(
+      toggleCompletedPatch({ ...s, completed: true, completed_at: "x" }, NOW),
+    ).toEqual({ completed: false });
+  });
+
   it("正常系: 新しいサブタスクは未完了で、ID が毎回異なる", () => {
     const a = newSubtask("下調べ");
-    expect(a).toMatchObject({ title: "下調べ", completed: false });
+    expect(a).toMatchObject({
+      title: "下調べ",
+      completed: false,
+      planned_date: null,
+      start_date: null,
+      due_date: null,
+      completed_at: null,
+    });
     expect(a.id).toMatch(/^sub-/);
     expect(newSubtask("x").id).not.toBe(newSubtask("x").id);
   });
@@ -365,9 +383,33 @@ describe("サブタスク", () => {
   it("正常系: 完了したサブタスクの数と全体の数を返す。新しいタスクにはサブタスクがない", () => {
     const t = task({
       subtasks: [
-        { id: "1", title: "a", completed: true },
-        { id: "2", title: "b", completed: false },
-        { id: "3", title: "c", completed: true },
+        {
+          id: "1",
+          title: "a",
+          completed: true,
+          planned_date: null,
+          start_date: null,
+          due_date: null,
+          completed_at: null,
+        },
+        {
+          id: "2",
+          title: "b",
+          completed: false,
+          planned_date: null,
+          start_date: null,
+          due_date: null,
+          completed_at: null,
+        },
+        {
+          id: "3",
+          title: "c",
+          completed: true,
+          planned_date: null,
+          start_date: null,
+          due_date: null,
+          completed_at: null,
+        },
       ],
     });
     expect(subtaskProgress(t)).toEqual({ done: 2, total: 3 });
