@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { dueLabel, isOverdue } from "../taskLogic";
+import { dueLabel, isOverdue, subtaskProgress } from "../taskLogic";
 import type { Task } from "../types";
 
 /** `TaskItem` の props. */
@@ -22,6 +22,7 @@ export default function TaskItem({
   onToggleImportant,
 }: TaskItemProps): ReactElement {
   const due = dueLabel(task);
+  const { done, total } = subtaskProgress(task);
   return (
     <li
       className={`task-item${selected ? " selected" : ""}${task.completed ? " done" : ""}`}
@@ -37,9 +38,14 @@ export default function TaskItem({
       </button>
       <button type="button" className="task-body" onClick={onSelect}>
         <span className="task-title">{task.title}</span>
-        {(due || task.my_day) && (
+        {(due || task.my_day || total > 0) && (
           <span className="task-meta">
             {task.my_day && <span>☀ 今日の予定</span>}
+            {total > 0 && (
+              <span>
+                ☑ {done}/{total}
+              </span>
+            )}
             {due && (
               <span className={isOverdue(task) ? "overdue" : undefined}>
                 ▦ {due}

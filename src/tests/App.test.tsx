@@ -27,6 +27,7 @@ const DATA: TodoData = {
       my_day: false,
       due_date: "2000-01-01",
       note: "",
+      subtasks: [],
       planned_date: null,
       start_date: null,
       completed_at: null,
@@ -41,6 +42,7 @@ const DATA: TodoData = {
       my_day: true,
       due_date: todayString(),
       note: "",
+      subtasks: [],
       planned_date: null,
       start_date: null,
       completed_at: "2026-01-03T09:30",
@@ -140,6 +142,49 @@ describe("App", () => {
     );
   });
 
+  it("正常系: サブタスクを追加・完了・題名変更・削除できる。一覧に進み具合が出る", async () => {
+    const user = await renderApp();
+    await user.click(await screen.findByText("済んだこと"));
+    const detail = screen.getByRole("complementary", { name: "タスクの詳細" });
+    const add = within(detail).getByLabelText("サブタスクを追加");
+
+    await user.type(add, "   {Enter}");
+    expect(within(detail).queryAllByRole("listitem")).toHaveLength(0);
+    await user.type(add, "下調べ{Enter}");
+    await user.type(add, "清書{Enter}");
+    expect(add).toHaveValue("");
+    expect(
+      within(detail).getByLabelText("サブタスク 下調べ"),
+    ).toBeInTheDocument();
+    expect(
+      within(detail).getByLabelText("サブタスク 清書"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("☑ 0/2")).toBeInTheDocument();
+
+    await user.click(
+      within(detail).getByRole("button", { name: "下調べ を完了にする" }),
+    );
+    expect(screen.getByText("☑ 1/2")).toBeInTheDocument();
+    await user.click(
+      within(detail).getByRole("button", { name: "下調べ を未完了に戻す" }),
+    );
+    expect(screen.getByText("☑ 0/2")).toBeInTheDocument();
+
+    await user.type(within(detail).getByLabelText("サブタスク 清書"), "!");
+    expect(
+      within(detail).getByLabelText("サブタスク 清書!"),
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(detail).getByRole("button", { name: "清書! を削除" }),
+    );
+    await user.click(
+      within(detail).getByRole("button", { name: "下調べ を削除" }),
+    );
+    expect(within(detail).queryAllByRole("listitem")).toHaveLength(0);
+    expect(screen.queryByText(/☑/)).toBeNull();
+  });
+
   it("正常系: 予定日と着手日を入れられる", async () => {
     const user = await renderApp();
     await user.click(await screen.findByText("済んだこと"));
@@ -224,6 +269,7 @@ describe("App", () => {
         my_day: false,
         due_date: `2026-01-0${i + 1}`,
         note: "",
+        subtasks: [],
         planned_date: null,
         start_date: null,
         completed_at: i === 0 ? "2026-01-09T10:00" : null,

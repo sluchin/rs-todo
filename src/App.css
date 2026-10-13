@@ -470,3 +470,47 @@ input[data-empty="true"]:not(:focus)::-webkit-datetime-edit {
   min-width: 0;
   text-align: right;
 }
+
+.subtasks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subtasks ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.subtasks li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.subtasks li.done input {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.subtasks li input,
+.subtasks form input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+
+.subtasks form input {
+  width: 100%;
+}
+
+.subtasks .link-button {
+  color: var(--muted);
+}

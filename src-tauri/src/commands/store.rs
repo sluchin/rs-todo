@@ -12,6 +12,18 @@ const DATA_FILE_NAME: &str = "todo.json";
 /// 既定の保存先ディレクトリ (`dirs::data_dir()` の下) の名前.
 const APP_DIR_NAME: &str = "rstodo";
 
+/// タスクの中の, 小さな作業 (サブタスク).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Subtask {
+    /// サブタスクの識別子.
+    pub id: String,
+    /// サブタスクの題名.
+    pub title: String,
+    /// 完了しているか.
+    #[serde(default)]
+    pub completed: bool,
+}
+
 /// 1 つのタスク.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Task {
@@ -40,6 +52,9 @@ pub struct Task {
     /// メモ.
     #[serde(default)]
     pub note: String,
+    /// サブタスク. 追加した順に並ぶ.
+    #[serde(default)]
+    pub subtasks: Vec<Subtask>,
     /// 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未設定なら `None`. 完了を解除しても残す.
     #[serde(default)]
     pub completed_at: Option<String>,
@@ -188,6 +203,11 @@ mod tests {
                 planned_date: Some("2026-01-04".into()),
                 start_date: Some("2026-01-03".into()),
                 note: "2 本".into(),
+                subtasks: vec![Subtask {
+                    id: "s1".into(),
+                    title: "レジに並ぶ".into(),
+                    completed: true,
+                }],
                 completed_at: Some("2026-01-03T09:30".into()),
                 list_id: "list-1".into(),
                 created_at: "2026-01-01T00:00:00Z".into(),
@@ -262,6 +282,7 @@ mod tests {
         assert_eq!(data.tasks[0].completed_at, None);
         assert_eq!(data.tasks[0].planned_date, None);
         assert_eq!(data.tasks[0].start_date, None);
+        assert!(data.tasks[0].subtasks.is_empty());
     }
 
     #[test]

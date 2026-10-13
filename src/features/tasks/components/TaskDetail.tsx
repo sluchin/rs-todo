@@ -1,6 +1,8 @@
 import type { ReactElement } from "react";
 import DateInput from "../../../components/DateInput";
-import type { Task } from "../types";
+import { useState } from "react";
+import { newSubtask } from "../taskLogic";
+import type { Subtask, Task } from "../types";
 
 /** `TaskDetail` の props. */
 interface TaskDetailProps {
@@ -11,7 +13,7 @@ interface TaskDetailProps {
 }
 
 /**
- * 右側の詳細ペイン. 題名, 今日の予定, 予定日, 着手日, 期限, 完了日, メモを編集し, タスクを削除する.
+ * 右側の詳細ペイン. 題名, サブタスク, 今日の予定, 予定日, 着手日, 期限, 完了日, メモを編集し, タスクを削除する.
  */
 export default function TaskDetail({
   task,
@@ -19,6 +21,20 @@ export default function TaskDetail({
   onDelete,
   onClose,
 }: TaskDetailProps): ReactElement {
+  const [subtaskTitle, setSubtaskTitle] = useState("");
+
+  const setSubtasks = (subtasks: Subtask[]): void => onUpdate({ subtasks });
+  const patchSubtask = (id: string, patch: Partial<Subtask>): void =>
+    setSubtasks(
+      task.subtasks.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+    );
+  const addSubtask = (): void => {
+    const trimmed = subtaskTitle.trim();
+    if (trimmed === "") return;
+    setSubtasks([...task.subtasks, newSubtask(trimmed)]);
+    setSubtaskTitle("");
+  };
+
   return (
     <aside className="task-detail" aria-label="タスクの詳細">
       <input
@@ -27,6 +43,51 @@ export default function TaskDetail({
         value={task.title}
         onChange={(e) => onUpdate({ title: e.target.value })}
       />
+      <section className="subtasks" aria-label="サブタスク">
+        <ul>
+          {task.subtasks.map((s) => (
+            <li key={s.id} className={s.completed ? "done" : undefined}>
+              <button
+                type="button"
+                className={`circle${s.completed ? " checked" : ""}`}
+                aria-label={`${s.title} を${s.completed ? "未完了に戻す" : "完了にする"}`}
+                aria-pressed={s.completed}
+                onClick={() => patchSubtask(s.id, { completed: !s.completed })}
+              >
+                {s.completed ? "✓" : ""}
+              </button>
+              <input
+                aria-label={`サブタスク ${s.title}`}
+                value={s.title}
+                onChange={(e) => patchSubtask(s.id, { title: e.target.value })}
+              />
+              <button
+                type="button"
+                className="link-button"
+                aria-label={`${s.title} を削除`}
+                onClick={() =>
+                  setSubtasks(task.subtasks.filter((x) => x.id !== s.id))
+                }
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            addSubtask();
+          }}
+        >
+          <input
+            aria-label="サブタスクを追加"
+            placeholder="+ サブタスクを追加"
+            value={subtaskTitle}
+            onChange={(e) => setSubtaskTitle(e.target.value)}
+          />
+        </form>
+      </section>
       <button
         type="button"
         className={`detail-row${task.my_day ? " on" : ""}`}

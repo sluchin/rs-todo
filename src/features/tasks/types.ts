@@ -1,3 +1,10 @@
+/** タスクの中の, 小さな作業 (サブタスク). */
+export interface Subtask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
 /** 1 つのタスク. バックエンドの `Task` 構造体と同じフィールド名にする. */
 export interface Task {
   id: string;
@@ -12,6 +19,8 @@ export interface Task {
   /** 着手日 (`YYYY-MM-DD`). 未設定なら `null`. */
   start_date: string | null;
   note: string;
+  /** サブタスク. 追加した順に並ぶ. */
+  subtasks: Subtask[];
   /** 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未設定なら `null`. 完了を解除しても残す. */
   completed_at: string | null;
   list_id: string;
