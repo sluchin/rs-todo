@@ -10,7 +10,7 @@ interface TaskDetailProps {
 }
 
 /**
- * 右側の詳細ペイン. 題名, 今日の予定, 期限, 完了日 (完了したタスクだけ), メモを編集し, タスクを削除する.
+ * 右側の詳細ペイン. 題名, 今日の予定, 予定日, 着手日, 期限, 完了日, メモを編集し, タスクを削除する.
  */
 export default function TaskDetail({
   task,
@@ -35,6 +35,24 @@ export default function TaskDetail({
         ☀ {task.my_day ? "今日の予定に追加済み" : "今日の予定に追加"}
       </button>
       <label className="detail-row">
+        <span>▷ 予定日</span>
+        <input
+          type="date"
+          aria-label="予定日"
+          value={task.planned_date ?? ""}
+          onChange={(e) => onUpdate({ planned_date: e.target.value || null })}
+        />
+      </label>
+      <label className="detail-row">
+        <span>▶ 着手日</span>
+        <input
+          type="date"
+          aria-label="着手日"
+          value={task.start_date ?? ""}
+          onChange={(e) => onUpdate({ start_date: e.target.value || null })}
+        />
+      </label>
+      <label className="detail-row">
         <span>▦ 期限</span>
         <input
           type="date"
@@ -43,17 +61,15 @@ export default function TaskDetail({
           onChange={(e) => onUpdate({ due_date: e.target.value || null })}
         />
       </label>
-      {task.completed && (
-        <label className="detail-row">
-          <span>✓ 完了日</span>
-          <input
-            type="datetime-local"
-            aria-label="完了日"
-            value={task.completed_at ?? ""}
-            onChange={(e) => onUpdate({ completed_at: e.target.value || null })}
-          />
-        </label>
-      )}
+      <label className="detail-row">
+        <span>✓ 完了日</span>
+        <input
+          type="datetime-local"
+          aria-label="完了日"
+          value={task.completed_at ?? ""}
+          onChange={(e) => onUpdate({ completed_at: e.target.value || null })}
+        />
+      </label>
       <textarea
         className="detail-note"
         aria-label="メモ"

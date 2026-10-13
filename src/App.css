@@ -432,3 +432,25 @@ button {
   justify-content: flex-end;
   gap: 8px;
 }
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.filter-bar input,
+.filter-bar button {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.9);
+  color: var(--text);
+}
+
+.empty {
+  margin: 16px 0;
+  opacity: 0.85;
+}

@@ -26,6 +26,8 @@ const DATA: TodoData = {
       my_day: false,
       due_date: "2000-01-01",
       note: "",
+      planned_date: null,
+      start_date: null,
       completed_at: null,
       list_id: "l1",
       created_at: "2026-01-01T00:00:00.000Z",
@@ -38,6 +40,8 @@ const DATA: TodoData = {
       my_day: true,
       due_date: todayString(),
       note: "",
+      planned_date: null,
+      start_date: null,
       completed_at: "2026-01-03T09:30",
       list_id: "tasks",
       created_at: "2026-01-02T00:00:00.000Z",
@@ -104,22 +108,108 @@ describe("App", () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "完了にする" }));
     expect(
-      screen.getByRole("button", { name: /完了済み 1/ }),
+      within(screen.getByRole("main")).getByRole("button", {
+        name: /完了済み 1/,
+      }),
     ).toBeInTheDocument();
   });
 
-  it("正常系: 完了にすると完了日が入り、未完了に戻すと消える。未完了のタスクの詳細には完了日がない", async () => {
+  it("正常系: 完了日は未完了でも出る。完了にすると空なら入り、解除しても残る。入っていれば上書きしない", async () => {
     const user = await renderApp();
+    // 「済んだこと」は完了日が入っている。解除しても、完了日はそのまま。
     await user.click(
       await screen.findByRole("button", { name: "未完了に戻す" }),
     );
     await user.click(screen.getByText("済んだこと"));
-    expect(screen.queryByLabelText("完了日")).toBeNull();
+    expect(screen.getByLabelText("完了日")).toHaveValue("2026-01-03T09:30");
 
+    // もう一度完了にしても、入っている完了日は変わらない。
+    await user.click(screen.getByRole("button", { name: "完了にする" }));
+    expect(screen.getByLabelText("完了日")).toHaveValue("2026-01-03T09:30");
+
+    // 完了日を空にして、解除して、完了にすると、現在の日時が入る。
+    fireEvent.change(screen.getByLabelText("完了日"), {
+      target: { value: "" },
+    });
+    await user.click(screen.getByRole("button", { name: "未完了に戻す" }));
+    expect(screen.getByLabelText("完了日")).toHaveValue("");
     await user.click(screen.getByRole("button", { name: "完了にする" }));
     expect((screen.getByLabelText("完了日") as HTMLInputElement).value).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/,
     );
+  });
+
+  it("正常系: 予定日と着手日を入れられる", async () => {
+    const user = await renderApp();
+    await user.click(await screen.findByText("済んだこと"));
+    const detail = screen.getByRole("complementary", { name: "タスクの詳細" });
+    const planned = within(detail).getByLabelText("予定日");
+    const start = within(detail).getByLabelText("着手日");
+    expect(planned).toHaveValue("");
+    fireEvent.change(planned, { target: { value: "2026-03-01" } });
+    fireEvent.change(start, { target: { value: "2026-03-02" } });
+    expect(planned).toHaveValue("2026-03-01");
+    expect(start).toHaveValue("2026-03-02");
+    fireEvent.change(planned, { target: { value: "" } });
+    fireEvent.change(start, { target: { value: "" } });
+    expect(planned).toHaveValue("");
+    expect(start).toHaveValue("");
+  });
+
+  it("正常系: サイドバーの「完了済み」に完了したタスクだけを出し、完了日で絞り込める", async () => {
+    const mk = (id: string, completedAt: string | null) => ({
+      ...DATA.tasks[1],
+      id,
+      title: `完了${id}`,
+      completed: true,
+      completed_at: completedAt,
+    });
+    const data: TodoData = {
+      lists: [],
+      tasks: [
+        mk("a", "2026-01-03T09:30"),
+        mk("b", "2026-02-10T10:00"),
+        mk("c", null),
+        { ...DATA.tasks[0], id: "open", title: "未完了のもの" },
+      ],
+    };
+    const user = await renderApp(data);
+    const row = within(
+      await screen.findByRole("navigation", { name: "リスト" }),
+    ).getByRole("button", { name: /完了済み/ });
+    expect(row).toHaveTextContent("3");
+    await user.click(row);
+
+    expect(
+      screen.getByRole("heading", { name: "完了済み" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("タスクを追加")).toBeNull();
+    expect(screen.queryByText("未完了のもの")).toBeNull();
+    const titles = () =>
+      within(screen.getByRole("list", { name: "完了済みのタスク" }))
+        .queryAllByRole("listitem")
+        .map((li) => li.textContent);
+    expect(titles()).toHaveLength(3);
+
+    fireEvent.change(screen.getByLabelText("完了日の開始"), {
+      target: { value: "2026-02-01" },
+    });
+    expect(titles()).toEqual([expect.stringContaining("完了b")]);
+    fireEvent.change(screen.getByLabelText("完了日の開始"), {
+      target: { value: "2026-01-01" },
+    });
+    fireEvent.change(screen.getByLabelText("完了日の終了"), {
+      target: { value: "2026-01-31" },
+    });
+    expect(titles()).toEqual([expect.stringContaining("完了a")]);
+    fireEvent.change(screen.getByLabelText("完了日の終了"), {
+      target: { value: "2000-01-01" },
+    });
+    expect(titles()).toHaveLength(0);
+    expect(screen.getByText("該当するタスクはありません")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "解除" }));
+    expect(titles()).toHaveLength(3);
   });
 
   it("正常系: 期限・完了日で並べ替えられ、向きを切り替えられる", async () => {
@@ -133,6 +223,8 @@ describe("App", () => {
         my_day: false,
         due_date: `2026-01-0${i + 1}`,
         note: "",
+        planned_date: null,
+        start_date: null,
         completed_at: i === 0 ? "2026-01-09T10:00" : null,
         list_id: "tasks",
         created_at: `2026-01-0${i + 1}T00:00:00.000Z`,
@@ -246,7 +338,10 @@ describe("App", () => {
 
   it("正常系: 完了済みの一覧を折りたためる", async () => {
     const user = await renderApp();
-    const toggle = await screen.findByRole("button", { name: /完了済み 1/ });
+    const toggle = await within(await screen.findByRole("main")).findByRole(
+      "button",
+      { name: /完了済み 1/ },
+    );
     await user.click(toggle);
     expect(screen.queryByRole("list", { name: "完了済みのタスク" })).toBeNull();
     await user.click(toggle);

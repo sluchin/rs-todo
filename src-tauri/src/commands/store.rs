@@ -31,10 +31,16 @@ pub struct Task {
     /// 期限 (`YYYY-MM-DD`). 未設定なら `None`.
     #[serde(default)]
     pub due_date: Option<String>,
+    /// 予定日 (`YYYY-MM-DD`). 未設定なら `None`.
+    #[serde(default)]
+    pub planned_date: Option<String>,
+    /// 着手日 (`YYYY-MM-DD`). 未設定なら `None`.
+    #[serde(default)]
+    pub start_date: Option<String>,
     /// メモ.
     #[serde(default)]
     pub note: String,
-    /// 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未完了, または未設定なら `None`.
+    /// 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未設定なら `None`. 完了を解除しても残す.
     #[serde(default)]
     pub completed_at: Option<String>,
     /// 属するリストの識別子.
@@ -179,6 +185,8 @@ mod tests {
                 important: true,
                 my_day: true,
                 due_date: Some("2026-01-02".into()),
+                planned_date: Some("2026-01-04".into()),
+                start_date: Some("2026-01-03".into()),
                 note: "2 本".into(),
                 completed_at: Some("2026-01-03T09:30".into()),
                 list_id: "list-1".into(),
@@ -252,6 +260,8 @@ mod tests {
         assert!(!data.tasks[0].completed);
         assert_eq!(data.tasks[0].due_date, None);
         assert_eq!(data.tasks[0].completed_at, None);
+        assert_eq!(data.tasks[0].planned_date, None);
+        assert_eq!(data.tasks[0].start_date, None);
     }
 
     #[test]

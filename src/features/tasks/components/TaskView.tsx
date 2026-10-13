@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { useState } from "react";
 import {
   SORT_LABELS,
+  filterByCompletedDate,
   splitTasks,
   toggleCompletedPatch,
   viewTitle,
@@ -40,7 +41,14 @@ export default function TaskView({
 }: TaskViewProps): ReactElement {
   const [title, setTitle] = useState("");
   const [showDone, setShowDone] = useState(true);
-  const { active, done } = splitTasks(tasks, view, sort);
+  const [completedFrom, setCompletedFrom] = useState("");
+  const [completedTo, setCompletedTo] = useState("");
+  const isCompletedView = view === "completed";
+  const split = splitTasks(tasks, view, sort);
+  const active = split.active;
+  const done = isCompletedView
+    ? filterByCompletedDate(split.done, completedFrom, completedTo)
+    : split.done;
   const isCustomList = lists.some((l) => l.id === view);
 
   const submit = (): void => {
@@ -104,44 +112,82 @@ export default function TaskView({
         </button>
       </div>
 
-      <form
-        className="add-task"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit();
-        }}
-      >
-        <span className="add-icon" aria-hidden="true">
-          +
-        </span>
-        <input
-          aria-label="タスクを追加"
-          placeholder="タスクを追加"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </form>
-
-      <ul className="task-list" aria-label="未完了のタスク">
-        {active.map(renderItem)}
-      </ul>
-
-      {done.length > 0 && (
-        <section className="done-section">
-          <button
-            type="button"
-            className="done-toggle"
-            aria-expanded={showDone}
-            onClick={() => setShowDone((v) => !v)}
-          >
-            {showDone ? "▾" : "▸"} 完了済み {done.length}
-          </button>
-          {showDone && (
-            <ul className="task-list" aria-label="完了済みのタスク">
-              {done.map(renderItem)}
-            </ul>
+      {isCompletedView ? (
+        <>
+          <div className="filter-bar">
+            <span>完了日</span>
+            <input
+              type="date"
+              aria-label="完了日の開始"
+              value={completedFrom}
+              onChange={(e) => setCompletedFrom(e.target.value)}
+            />
+            <span>〜</span>
+            <input
+              type="date"
+              aria-label="完了日の終了"
+              value={completedTo}
+              onChange={(e) => setCompletedTo(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setCompletedFrom("");
+                setCompletedTo("");
+              }}
+            >
+              解除
+            </button>
+          </div>
+          <ul className="task-list" aria-label="完了済みのタスク">
+            {done.map(renderItem)}
+          </ul>
+          {done.length === 0 && (
+            <p className="empty">該当するタスクはありません</p>
           )}
-        </section>
+        </>
+      ) : (
+        <>
+          <form
+            className="add-task"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
+          >
+            <span className="add-icon" aria-hidden="true">
+              +
+            </span>
+            <input
+              aria-label="タスクを追加"
+              placeholder="タスクを追加"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </form>
+
+          <ul className="task-list" aria-label="未完了のタスク">
+            {active.map(renderItem)}
+          </ul>
+
+          {done.length > 0 && (
+            <section className="done-section">
+              <button
+                type="button"
+                className="done-toggle"
+                aria-expanded={showDone}
+                onClick={() => setShowDone((v) => !v)}
+              >
+                {showDone ? "▾" : "▸"} 完了済み {done.length}
+              </button>
+              {showDone && (
+                <ul className="task-list" aria-label="完了済みのタスク">
+                  {done.map(renderItem)}
+                </ul>
+              )}
+            </section>
+          )}
+        </>
       )}
     </main>
   );

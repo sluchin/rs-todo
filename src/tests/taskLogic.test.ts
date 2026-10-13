@@ -3,6 +3,7 @@ import {
   DEFAULT_LIST_ID,
   allLists,
   countActive,
+  filterByCompletedDate,
   createTask,
   dueLabel,
   inView,
@@ -31,6 +32,8 @@ function task(patch: Partial<Task> = {}): Task {
     due_date: null,
     note: "",
     completed_at: null,
+    planned_date: null,
+    start_date: null,
     list_id: DEFAULT_LIST_ID,
     created_at: "2026-01-01T00:00:00.000Z",
     ...patch,
@@ -53,17 +56,20 @@ describe("nowLocalString / toggleCompletedPatch", () => {
     expect(nowLocalString()).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
   });
 
-  it("正常系: 完了にすると完了した日時を記録し、未完了に戻すと消す", () => {
+  it("正常系: 完了にするとき完了日が空なら記録し、入っていればそのまま。未完了に戻しても完了日は触らない", () => {
     expect(toggleCompletedPatch(task(), NOW)).toEqual({
       completed: true,
       completed_at: "2026-01-05T09:00",
     });
     expect(
+      toggleCompletedPatch(task({ completed_at: "2026-01-01T08:00" }), NOW),
+    ).toEqual({ completed: true, completed_at: "2026-01-01T08:00" });
+    expect(
       toggleCompletedPatch(
         task({ completed: true, completed_at: "2026-01-05T09:00" }),
         NOW,
       ),
-    ).toEqual({ completed: false, completed_at: null });
+    ).toEqual({ completed: false });
     expect(toggleCompletedPatch(task()).completed_at).toMatch(/^\d{4}-/);
   });
 
@@ -222,6 +228,56 @@ describe("sortTasks / splitTasks の並べ替え", () => {
       dir: "desc",
     });
     expect(ids(done)).toEqual(["d2", "d1"]);
+  });
+});
+
+describe("完了済みビュー / 完了日の絞り込み", () => {
+  const a = task({
+    id: "a",
+    completed: true,
+    completed_at: "2026-01-03T09:30",
+  });
+  const b = task({
+    id: "b",
+    completed: true,
+    completed_at: "2026-02-10T10:00",
+  });
+  const c = task({ id: "c", completed: true });
+  const open = task({ id: "o" });
+
+  it("正常系: 完了済みビューは完了したタスクだけで、数も完了したタスクの数", () => {
+    expect(inView(a, "completed")).toBe(true);
+    expect(inView(open, "completed")).toBe(false);
+    expect(countActive([a, b, c, open], "completed")).toBe(3);
+    expect(countActive([a, b, c, open], "all")).toBe(1);
+  });
+
+  it("正常系: 完了日の範囲で絞り込む. 範囲を指定すると完了日が無いものは除く", () => {
+    const all = [a, b, c];
+    expect(filterByCompletedDate(all, "", "")).toBe(all);
+    expect(filterByCompletedDate(all, "2026-02-01", "")).toEqual([b]);
+    expect(filterByCompletedDate(all, "", "2026-01-31")).toEqual([a]);
+    expect(filterByCompletedDate(all, "2026-01-03", "2026-01-03")).toEqual([a]);
+    expect(filterByCompletedDate(all, "2026-03-01", "")).toEqual([]);
+  });
+
+  it("正常系: 予定日・着手日で並べ替える", () => {
+    const x = task({
+      id: "x",
+      planned_date: "2026-01-02",
+      start_date: "2026-01-09",
+    });
+    const y = task({
+      id: "y",
+      planned_date: "2026-01-01",
+      start_date: "2026-01-08",
+    });
+    expect(
+      sortTasks([x, y], { key: "planned", dir: "asc" }).map((t) => t.id),
+    ).toEqual(["y", "x"]);
+    expect(
+      sortTasks([x, y], { key: "start", dir: "desc" }).map((t) => t.id),
+    ).toEqual(["x", "y"]);
   });
 });
 
