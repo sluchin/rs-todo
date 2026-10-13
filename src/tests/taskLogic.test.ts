@@ -11,6 +11,7 @@ import {
   nowLocalString,
   toggleCompletedPatch,
   removeList,
+  sortTasks,
   splitTasks,
   todayString,
   viewTitle,
@@ -130,6 +131,97 @@ describe("splitTasks", () => {
     const { active, done } = splitTasks(tasks, DEFAULT_LIST_ID);
     expect(active.map((t) => t.id)).toEqual(["new", "old"]);
     expect(done.map((t) => t.id)).toEqual(["done"]);
+  });
+});
+
+describe("sortTasks / splitTasks の並べ替え", () => {
+  const a = task({
+    id: "a",
+    title: "b",
+    due_date: "2026-01-03",
+    created_at: "2026-01-01T00:00:00.000Z",
+  });
+  const b = task({
+    id: "b",
+    title: "a",
+    due_date: "2026-01-01",
+    completed_at: "2026-01-09T10:00",
+    created_at: "2026-01-02T00:00:00.000Z",
+  });
+  const c = task({
+    id: "c",
+    title: "c",
+    completed_at: "2026-01-08T10:00",
+    created_at: "2026-01-03T00:00:00.000Z",
+  });
+  const ids = (ts: Task[]) => ts.map((t) => t.id);
+
+  it("正常系: 期限の昇順・降順. 期限が無いものは、向きにかかわらず最後", () => {
+    expect(ids(sortTasks([c, a, b], { key: "due", dir: "asc" }))).toEqual([
+      "b",
+      "a",
+      "c",
+    ]);
+    expect(ids(sortTasks([c, a, b], { key: "due", dir: "desc" }))).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
+  it("正常系: 完了日の昇順・降順. 完了日が無いものは最後", () => {
+    expect(ids(sortTasks([a, b, c], { key: "completed", dir: "asc" }))).toEqual(
+      ["c", "b", "a"],
+    );
+    expect(
+      ids(sortTasks([a, b, c], { key: "completed", dir: "desc" })),
+    ).toEqual(["b", "c", "a"]);
+  });
+
+  it("正常系: 題名・作成日で並べる", () => {
+    expect(ids(sortTasks([a, b, c], { key: "title", dir: "asc" }))).toEqual([
+      "b",
+      "a",
+      "c",
+    ]);
+    expect(ids(sortTasks([a, b, c], { key: "created", dir: "asc" }))).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
+  it("正常系: 値が同じ・どちらも無いときは、作成が新しい順. 元の配列は変えない", () => {
+    const x = task({ id: "x", created_at: "2026-02-01T00:00:00.000Z" });
+    const y = task({ id: "y", created_at: "2026-03-01T00:00:00.000Z" });
+    const input = [x, y];
+    expect(ids(sortTasks(input, { key: "due", dir: "asc" }))).toEqual([
+      "y",
+      "x",
+    ]);
+    expect(ids(sortTasks([x, y], { key: "title", dir: "asc" }))).toEqual([
+      "y",
+      "x",
+    ]);
+    expect(ids(input)).toEqual(["x", "y"]);
+  });
+
+  it("正常系: splitTasks は、未完了と完了のどちらも指定した順に並べる", () => {
+    const d1 = task({
+      id: "d1",
+      completed: true,
+      completed_at: "2026-01-02T10:00",
+    });
+    const d2 = task({
+      id: "d2",
+      completed: true,
+      completed_at: "2026-01-05T10:00",
+    });
+    const { done } = splitTasks([d1, d2], DEFAULT_LIST_ID, {
+      key: "completed",
+      dir: "desc",
+    });
+    expect(ids(done)).toEqual(["d2", "d1"]);
   });
 });
 

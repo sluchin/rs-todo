@@ -1,7 +1,12 @@
 import type { ReactElement } from "react";
 import { useState } from "react";
-import { splitTasks, toggleCompletedPatch, viewTitle } from "../taskLogic";
-import type { Task, TaskList, ViewId } from "../types";
+import {
+  SORT_LABELS,
+  splitTasks,
+  toggleCompletedPatch,
+  viewTitle,
+} from "../taskLogic";
+import type { SortKey, SortOrder, Task, TaskList, ViewId } from "../types";
 import TaskItem from "./TaskItem";
 
 /** `TaskView` の props. */
@@ -14,6 +19,8 @@ interface TaskViewProps {
   onAddTask: (title: string) => void;
   onUpdateTask: (id: string, patch: Partial<Task>) => void;
   onDeleteList: (id: string) => void;
+  sort: SortOrder;
+  onSortChange: (sort: SortOrder) => void;
 }
 
 /**
@@ -28,10 +35,12 @@ export default function TaskView({
   onAddTask,
   onUpdateTask,
   onDeleteList,
+  sort,
+  onSortChange,
 }: TaskViewProps): ReactElement {
   const [title, setTitle] = useState("");
   const [showDone, setShowDone] = useState(true);
-  const { active, done } = splitTasks(tasks, view);
+  const { active, done } = splitTasks(tasks, view, sort);
   const isCustomList = lists.some((l) => l.id === view);
 
   const submit = (): void => {
@@ -66,6 +75,34 @@ export default function TaskView({
           </button>
         )}
       </header>
+
+      <div className="sort-bar">
+        <label>
+          並べ替え
+          <select
+            aria-label="並べ替えの基準"
+            value={sort.key}
+            onChange={(e) =>
+              onSortChange({ ...sort, key: e.target.value as SortKey })
+            }
+          >
+            {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+              <option key={k} value={k}>
+                {SORT_LABELS[k]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          aria-label="並べ替えの向き"
+          onClick={() =>
+            onSortChange({ ...sort, dir: sort.dir === "asc" ? "desc" : "asc" })
+          }
+        >
+          {sort.dir === "asc" ? "↑ 昇順" : "↓ 降順"}
+        </button>
+      </div>
 
       <form
         className="add-task"
