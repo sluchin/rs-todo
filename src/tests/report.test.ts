@@ -13,6 +13,8 @@ function task(patch: Partial<Task>): Task {
     due_date: null,
     note: "",
     completed_at: null,
+    planned_date: null,
+    start_date: null,
     list_id: "tasks",
     created_at: "2026-01-01T00:00:00.000Z",
     ...patch,

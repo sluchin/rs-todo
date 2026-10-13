@@ -14,6 +14,8 @@ export const DEFAULT_SORT: SortOrder = { key: "created", dir: "desc" };
 /** 並べ替えの基準の表示名. */
 export const SORT_LABELS: Record<SortKey, string> = {
   created: "作成日",
+  planned: "予定日",
+  start: "着手日",
   due: "期限",
   completed: "完了日",
   title: "題名",
@@ -31,6 +33,7 @@ export const SMART_VIEWS: SmartView[] = [
   { id: "important", label: "重要", icon: "☆" },
   { id: "planned", label: "計画済み", icon: "▦" },
   { id: "all", label: "すべて", icon: "∞" },
+  { id: "completed", label: "完了済み", icon: "✓" },
 ];
 
 /** 既定のリストを含む, すべてのリストを返します. */
@@ -71,8 +74,8 @@ export function nowLocalString(now: Date = new Date()): string {
 }
 
 /**
- * 完了の状態を切り替えるときの変更内容を返します. 完了にするときは完了した日時を記録し,
- * 未完了に戻すときは消します.
+ * 完了の状態を切り替えるときの変更内容を返します. 完了にするときに完了日が空なら, 完了した日時を
+ * 記録します (入っていれば, そのまま). 未完了に戻すときも, 完了日は残します.
  *
  * @param task - 切り替えるタスク.
  * @param now - 現在の日時.
@@ -82,9 +85,13 @@ export function toggleCompletedPatch(
   task: Task,
   now: Date = new Date(),
 ): Partial<Task> {
-  return task.completed
-    ? { completed: false, completed_at: null }
-    : { completed: true, completed_at: nowLocalString(now) };
+  if (task.completed) {
+    return { completed: false };
+  }
+  return {
+    completed: true,
+    completed_at: task.completed_at || nowLocalString(now),
+  };
 }
 
 /** 重複しにくい ID を作ります. */
@@ -109,6 +116,8 @@ export function inView(task: Task, view: ViewId): boolean {
       return task.due_date !== null;
     case "all":
       return true;
+    case "completed":
+      return task.completed;
     default:
       return task.list_id === view;
   }
@@ -119,6 +128,10 @@ function sortValue(task: Task, key: SortKey): string | null {
   switch (key) {
     case "created":
       return task.created_at;
+    case "planned":
+      return task.planned_date;
+    case "start":
+      return task.start_date;
     case "due":
       return task.due_date;
     case "completed":
@@ -168,9 +181,12 @@ export function splitTasks(
   };
 }
 
-/** ビューの未完了タスクの数を返します. */
+/** ビューのタスクの数を返します. 「完了済み」は完了したタスクの数, ほかは未完了のタスクの数. */
 export function countActive(tasks: Task[], view: ViewId): number {
-  return tasks.filter((t) => !t.completed && inView(t, view)).length;
+  return tasks.filter(
+    (t) =>
+      (view === "completed" ? t.completed : !t.completed) && inView(t, view),
+  ).length;
 }
 
 /**
@@ -195,10 +211,34 @@ export function createTask(
     my_day: view === "my-day",
     due_date: view === "my-day" || view === "planned" ? todayString(now) : null,
     note: "",
+    planned_date: null,
+    start_date: null,
     completed_at: null,
     list_id: isSmart ? DEFAULT_LIST_ID : view,
     created_at: now.toISOString(),
   };
+}
+
+/**
+ * 完了日 (日付の部分) が範囲に入るタスクだけを返します. 範囲が空 (どちらも空文字) なら, すべて返します.
+ * 範囲を指定したときは, 完了日の無いタスクを除きます.
+ *
+ * @param tasks - 絞り込むタスク.
+ * @param from - 範囲の最初の日 (`YYYY-MM-DD`). 空文字なら下限なし.
+ * @param to - 範囲の最後の日 (`YYYY-MM-DD`). 空文字なら上限なし.
+ * @returns 絞り込んだタスク.
+ */
+export function filterByCompletedDate(
+  tasks: Task[],
+  from: string,
+  to: string,
+): Task[] {
+  if (from === "" && to === "") return tasks;
+  return tasks.filter((t) => {
+    if (!t.completed_at) return false;
+    const day = t.completed_at.slice(0, 10);
+    return (from === "" || day >= from) && (to === "" || day <= to);
+  });
 }
 
 /** 期限の表示用の文字列を返します. 期限がなければ `null`. */

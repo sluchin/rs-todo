@@ -7,8 +7,12 @@ export interface Task {
   my_day: boolean;
   /** 期限 (`YYYY-MM-DD`). 未設定なら `null`. */
   due_date: string | null;
+  /** 予定日 (`YYYY-MM-DD`). 未設定なら `null`. */
+  planned_date: string | null;
+  /** 着手日 (`YYYY-MM-DD`). 未設定なら `null`. */
+  start_date: string | null;
   note: string;
-  /** 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未完了、または未設定なら `null`. */
+  /** 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未設定なら `null`. 完了を解除しても残す. */
   completed_at: string | null;
   list_id: string;
   /** 作成日時 (ISO 8601). */
@@ -31,8 +35,9 @@ export interface TodoData {
 /** 画面に表示するビューの識別子. スマートリストの ID か, リストの ID. */
 export type ViewId = string;
 
-/** 並べ替えの基準. 作成日・期限・完了日・題名. */
-export type SortKey = "created" | "due" | "completed" | "title";
+/** 並べ替えの基準. 作成日・予定日・着手日・期限・完了日・題名. */
+export type SortKey =
+  "created" | "planned" | "start" | "due" | "completed" | "title";
 
 /** 並べ替えの向き. */
 export type SortDir = "asc" | "desc";
