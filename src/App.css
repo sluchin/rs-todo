@@ -454,3 +454,19 @@ button {
   margin: 16px 0;
   opacity: 0.85;
 }
+
+/* 値が空の日付入力欄は, ブラウザの「yyyy/mm/dd」の表示を隠す. 入力中 (フォーカス中) は出す. */
+input[data-empty="true"]:not(:focus)::-webkit-datetime-edit {
+  color: transparent;
+}
+
+.detail-row > span {
+  flex: none;
+  white-space: nowrap;
+}
+
+.detail-row > input {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+}

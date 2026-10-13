@@ -8,6 +8,7 @@ import {
   viewTitle,
 } from "../taskLogic";
 import type { SortKey, SortOrder, Task, TaskList, ViewId } from "../types";
+import DateInput from "../../../components/DateInput";
 import TaskItem from "./TaskItem";
 
 /** `TaskView` の props. */
@@ -116,18 +117,18 @@ export default function TaskView({
         <>
           <div className="filter-bar">
             <span>完了日</span>
-            <input
+            <DateInput
               type="date"
-              aria-label="完了日の開始"
+              label="完了日の開始"
               value={completedFrom}
-              onChange={(e) => setCompletedFrom(e.target.value)}
+              onChange={setCompletedFrom}
             />
             <span>〜</span>
-            <input
+            <DateInput
               type="date"
-              aria-label="完了日の終了"
+              label="完了日の終了"
               value={completedTo}
-              onChange={(e) => setCompletedTo(e.target.value)}
+              onChange={setCompletedTo}
             />
             <button
               type="button"
