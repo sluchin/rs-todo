@@ -466,6 +466,20 @@ describe("App", () => {
     );
   });
 
+  it("正常系: 右クリックのメニューは、タスク一覧などでは出さず、入力欄とメモでは出す", async () => {
+    const user = await renderApp();
+    await user.click(await screen.findByText("済んだこと"));
+
+    // fireEvent は、既定の動作が取り消されなかったときだけ true を返す.
+    expect(fireEvent.contextMenu(screen.getByText("済んだこと"))).toBe(false);
+    expect(fireEvent.contextMenu(screen.getByRole("main"))).toBe(false);
+    expect(fireEvent.contextMenu(screen.getByLabelText("タスクを追加"))).toBe(
+      true,
+    );
+    expect(fireEvent.contextMenu(screen.getByLabelText("メモ"))).toBe(true);
+    expect(fireEvent.contextMenu(screen.getByLabelText("題名"))).toBe(true);
+  });
+
   it("正常系: 完了済みの一覧を折りたためる", async () => {
     const user = await renderApp();
     const toggle = await within(await screen.findByRole("main")).findByRole(
