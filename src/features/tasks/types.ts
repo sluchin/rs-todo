@@ -31,6 +31,18 @@ export interface TodoData {
 /** 画面に表示するビューの識別子. スマートリストの ID か, リストの ID. */
 export type ViewId = string;
 
+/** 並べ替えの基準. 作成日・期限・完了日・題名. */
+export type SortKey = "created" | "due" | "completed" | "title";
+
+/** 並べ替えの向き. */
+export type SortDir = "asc" | "desc";
+
+/** 並べ替えの設定. */
+export interface SortOrder {
+  key: SortKey;
+  dir: SortDir;
+}
+
 /** スマートリスト (条件で自動的に集まるリスト) の定義. */
 export interface SmartView {
   id: ViewId;

@@ -122,6 +122,128 @@ describe("App", () => {
     );
   });
 
+  it("正常系: 期限・完了日で並べ替えられ、向きを切り替えられる", async () => {
+    const data: TodoData = {
+      lists: [],
+      tasks: ["c", "a", "b"].map((id, i) => ({
+        id,
+        title: `タスク${id}`,
+        completed: i === 0,
+        important: false,
+        my_day: false,
+        due_date: `2026-01-0${i + 1}`,
+        note: "",
+        completed_at: i === 0 ? "2026-01-09T10:00" : null,
+        list_id: "tasks",
+        created_at: `2026-01-0${i + 1}T00:00:00.000Z`,
+      })),
+    };
+    const user = await renderApp(data);
+    await user.click(await screen.findByRole("button", { name: /すべて/ }));
+    const titles = () =>
+      within(screen.getByRole("list", { name: "未完了のタスク" }))
+        .getAllByRole("listitem")
+        .map((li) => li.textContent?.replace(/[^タスクabc]/g, ""));
+
+    expect(titles()).toEqual(["タスクb", "タスクa"]);
+    // 基準を変えても向きは降順のまま. 期限の遅い順.
+    await user.selectOptions(screen.getByLabelText("並べ替えの基準"), "due");
+    expect(titles()).toEqual(["タスクb", "タスクa"]);
+    await user.click(screen.getByRole("button", { name: "並べ替えの向き" }));
+    expect(
+      screen.getByRole("button", { name: "並べ替えの向き" }),
+    ).toHaveTextContent("昇順");
+    expect(titles()).toEqual(["タスクa", "タスクb"]);
+    await user.click(screen.getByRole("button", { name: "並べ替えの向き" }));
+    expect(
+      screen.getByRole("button", { name: "並べ替えの向き" }),
+    ).toHaveTextContent("降順");
+    await user.selectOptions(
+      screen.getByLabelText("並べ替えの基準"),
+      "completed",
+    );
+    expect(screen.getByLabelText("並べ替えの基準")).toHaveValue("completed");
+  });
+
+  it("正常系: 日報を開き、日付を切り替え、コピーと保存ができる。Esc と閉じるで閉じる", async () => {
+    const user = await renderApp();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    await user.click(await screen.findByRole("button", { name: "日報" }));
+    const dialog = screen.getByRole("dialog", { name: "日報" });
+    const text = within(dialog).getByLabelText(
+      "日報の内容",
+    ) as HTMLTextAreaElement;
+    expect(text.value).toContain(`# 日報 ${todayString()}`);
+
+    await user.click(within(dialog).getByRole("button", { name: "前の日" }));
+    expect(text.value).not.toContain(`# 日報 ${todayString()}`);
+    await user.click(within(dialog).getByRole("button", { name: "次の日" }));
+    fireEvent.change(within(dialog).getByLabelText("日報の日付"), {
+      target: { value: "" },
+    });
+    expect(text.value).toContain(`# 日報 ${todayString()}`);
+
+    await user.click(within(dialog).getByRole("button", { name: "コピー" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(text.value));
+    expect(within(dialog).getByRole("status")).toHaveTextContent(
+      "コピーしました",
+    );
+
+    mockedInvoke.mockImplementation((cmd) =>
+      cmd === "save_report"
+        ? Promise.resolve("/d/reports/r.md")
+        : Promise.resolve(undefined),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "ファイルに保存" }),
+    );
+    await waitFor(() =>
+      expect(within(dialog).getByRole("status")).toHaveTextContent(
+        "/d/reports/r.md",
+      ),
+    );
+    expect(mockedInvoke).toHaveBeenCalledWith("save_report", {
+      date: todayString(),
+      content: text.value,
+    });
+
+    await user.keyboard("a");
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "日報" }));
+    await user.click(screen.getByRole("button", { name: "閉じる" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("異常系: 日報のコピーや保存に失敗したら、メッセージを出す", async () => {
+    const user = await renderApp();
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn().mockRejectedValue(new Error("NG")) },
+    });
+    await user.click(await screen.findByRole("button", { name: "日報" }));
+    const dialog = screen.getByRole("dialog", { name: "日報" });
+    await user.click(within(dialog).getByRole("button", { name: "コピー" }));
+    await waitFor(() =>
+      expect(within(dialog).getByRole("status")).toHaveTextContent(
+        "コピーできませんでした",
+      ),
+    );
+
+    mockedInvoke.mockRejectedValue("disk full");
+    await user.click(
+      within(dialog).getByRole("button", { name: "ファイルに保存" }),
+    );
+    await waitFor(() =>
+      expect(within(dialog).getByRole("status")).toHaveTextContent("disk full"),
+    );
+  });
+
   it("正常系: 完了済みの一覧を折りたためる", async () => {
     const user = await renderApp();
     const toggle = await screen.findByRole("button", { name: /完了済み 1/ });

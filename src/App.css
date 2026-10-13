@@ -353,3 +353,82 @@ button {
   background: transparent;
   color: var(--danger);
 }
+
+.report-button {
+  margin-top: auto;
+}
+
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.sort-bar select,
+.sort-bar button {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.9);
+  color: var(--text);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.4);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(640px, 92vw);
+  max-height: 88vh;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog-header h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+}
+
+.report-text {
+  min-height: 320px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.report-message {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -15,6 +15,7 @@ interface SidebarProps {
   selected: ViewId;
   onSelect: (view: ViewId) => void;
   onAddList: (name: string) => void;
+  onOpenReport: () => void;
 }
 
 /** ビューを選ぶ 1 行. */
@@ -50,6 +51,7 @@ export default function Sidebar({
   selected,
   onSelect,
   onAddList,
+  onOpenReport,
 }: SidebarProps): ReactElement {
   const [name, setName] = useState("");
 
@@ -111,6 +113,16 @@ export default function Sidebar({
           onChange={(e) => setName(e.target.value)}
         />
       </form>
+      <button
+        type="button"
+        className="nav-row report-button"
+        onClick={onOpenReport}
+      >
+        <span className="nav-icon" aria-hidden="true">
+          ✎
+        </span>
+        <span className="nav-label">日報</span>
+      </button>
     </nav>
   );
 }

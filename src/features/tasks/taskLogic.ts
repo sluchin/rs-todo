@@ -1,4 +1,23 @@
-import type { SmartView, Task, TaskList, TodoData, ViewId } from "./types";
+import type {
+  SmartView,
+  SortKey,
+  SortOrder,
+  Task,
+  TaskList,
+  TodoData,
+  ViewId,
+} from "./types";
+
+/** 既定の並べ替え (作成が新しい順). */
+export const DEFAULT_SORT: SortOrder = { key: "created", dir: "desc" };
+
+/** 並べ替えの基準の表示名. */
+export const SORT_LABELS: Record<SortKey, string> = {
+  created: "作成日",
+  due: "期限",
+  completed: "完了日",
+  title: "題名",
+};
 
 /** 既定のリスト「タスク」の ID. */
 export const DEFAULT_LIST_ID = "tasks";
@@ -95,17 +114,54 @@ export function inView(task: Task, view: ViewId): boolean {
   }
 }
 
+/** 並べ替えの基準になる値を返します. 値が無ければ `null`. */
+function sortValue(task: Task, key: SortKey): string | null {
+  switch (key) {
+    case "created":
+      return task.created_at;
+    case "due":
+      return task.due_date;
+    case "completed":
+      return task.completed_at;
+    case "title":
+      return task.title;
+  }
+}
+
 /**
- * ビューのタスクを, 未完了と完了に分けて返します.
- * 未完了は, 作成が新しい順. 完了は, 作成が新しい順.
+ * タスクを並べ替えた新しい配列を返します. 基準の値が無いタスクは, 向きにかかわらず最後に置きます.
+ * 値が同じときは, 作成が新しい順です.
+ *
+ * @param tasks - 並べ替えるタスク.
+ * @param order - 並べ替えの設定.
+ * @returns 並べ替えたタスク.
+ */
+export function sortTasks(tasks: Task[], order: SortOrder): Task[] {
+  const sign = order.dir === "asc" ? 1 : -1;
+  return [...tasks].sort((a, b) => {
+    const va = sortValue(a, order.key);
+    const vb = sortValue(b, order.key);
+    if (va === null || vb === null) {
+      if (va === vb) return b.created_at.localeCompare(a.created_at);
+      return va === null ? 1 : -1;
+    }
+    const c = va.localeCompare(vb);
+    return c !== 0 ? c * sign : b.created_at.localeCompare(a.created_at);
+  });
+}
+
+/**
+ * ビューのタスクを, 未完了と完了に分けて返します. どちらも, 指定した順に並べます.
  */
 export function splitTasks(
   tasks: Task[],
   view: ViewId,
+  order: SortOrder = DEFAULT_SORT,
 ): { active: Task[]; done: Task[] } {
-  const inThisView = tasks
-    .filter((t) => inView(t, view))
-    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const inThisView = sortTasks(
+    tasks.filter((t) => inView(t, view)),
+    order,
+  );
   return {
     active: inThisView.filter((t) => !t.completed),
     done: inThisView.filter((t) => t.completed),

@@ -1,4 +1,4 @@
-use rstodo::commands::{load_data, save_data, Task, TodoData};
+use rstodo::commands::{load_data, save_data, save_report, Task, TodoData};
 use tempfile::tempdir;
 
 #[test]
@@ -27,4 +27,12 @@ fn test_save_and_load_data_integration() {
     save_data(data.clone()).unwrap();
     assert_eq!(load_data().unwrap(), data);
     assert!(dir.path().join("todo.json").exists());
+
+    let path = save_report("2026-01-05".into(), "# 日報".into()).unwrap();
+    assert_eq!(
+        std::path::PathBuf::from(&path),
+        dir.path().join("reports").join("report-2026-01-05.md")
+    );
+    assert_eq!(std::fs::read_to_string(path).unwrap(), "# 日報");
+    assert!(save_report("bad".into(), "x".into()).is_err());
 }
