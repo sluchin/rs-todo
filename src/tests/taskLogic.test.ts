@@ -9,6 +9,8 @@ import {
   inView,
   isOverdue,
   newId,
+  newSubtask,
+  subtaskProgress,
   nowLocalString,
   toggleCompletedPatch,
   removeList,
@@ -31,6 +33,7 @@ function task(patch: Partial<Task> = {}): Task {
     my_day: false,
     due_date: null,
     note: "",
+    subtasks: [],
     completed_at: null,
     planned_date: null,
     start_date: null,
@@ -348,5 +351,27 @@ describe("removeList", () => {
     const next = removeList(data, "l1");
     expect(next.lists.map((l) => l.id)).toEqual(["l2"]);
     expect(next.tasks.map((t) => t.id)).toEqual(["y"]);
+  });
+});
+
+describe("サブタスク", () => {
+  it("正常系: 新しいサブタスクは未完了で、ID が毎回異なる", () => {
+    const a = newSubtask("下調べ");
+    expect(a).toMatchObject({ title: "下調べ", completed: false });
+    expect(a.id).toMatch(/^sub-/);
+    expect(newSubtask("x").id).not.toBe(newSubtask("x").id);
+  });
+
+  it("正常系: 完了したサブタスクの数と全体の数を返す。新しいタスクにはサブタスクがない", () => {
+    const t = task({
+      subtasks: [
+        { id: "1", title: "a", completed: true },
+        { id: "2", title: "b", completed: false },
+        { id: "3", title: "c", completed: true },
+      ],
+    });
+    expect(subtaskProgress(t)).toEqual({ done: 2, total: 3 });
+    expect(subtaskProgress(task())).toEqual({ done: 0, total: 0 });
+    expect(createTask("a", DEFAULT_LIST_ID, NOW).subtasks).toEqual([]);
   });
 });

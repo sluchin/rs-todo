@@ -1,5 +1,6 @@
 import type {
   SmartView,
+  Subtask,
   SortKey,
   SortOrder,
   Task,
@@ -211,6 +212,7 @@ export function createTask(
     my_day: view === "my-day",
     due_date: view === "my-day" || view === "planned" ? todayString(now) : null,
     note: "",
+    subtasks: [],
     planned_date: null,
     start_date: null,
     completed_at: null,
@@ -239,6 +241,24 @@ export function filterByCompletedDate(
     const day = t.completed_at.slice(0, 10);
     return (from === "" || day >= from) && (to === "" || day <= to);
   });
+}
+
+/** 新しいサブタスクを作ります. */
+export function newSubtask(title: string): Subtask {
+  return { id: newId("sub"), title, completed: false };
+}
+
+/**
+ * タスクのサブタスクの進み具合を返します.
+ *
+ * @param task - タスク.
+ * @returns 完了したサブタスクの数と, 全体の数.
+ */
+export function subtaskProgress(task: Task): { done: number; total: number } {
+  return {
+    done: task.subtasks.filter((s) => s.completed).length,
+    total: task.subtasks.length,
+  };
 }
 
 /** 期限の表示用の文字列を返します. 期限がなければ `null`. */

@@ -1,4 +1,4 @@
-use rstodo::commands::{load_data, save_data, save_report, Task, TodoData};
+use rstodo::commands::{load_data, save_data, save_report, Subtask, Task, TodoData};
 use tempfile::tempdir;
 
 #[test]
@@ -21,6 +21,11 @@ fn test_save_and_load_data_integration() {
             planned_date: Some("2026-01-01".into()),
             start_date: None,
             note: String::new(),
+            subtasks: vec![Subtask {
+                id: "s1".into(),
+                title: "確認".into(),
+                completed: false,
+            }],
             completed_at: Some("2026-01-02T10:00".into()),
             list_id: "tasks".into(),
             created_at: "2026-01-01T00:00:00Z".into(),
