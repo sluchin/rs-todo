@@ -19,6 +19,7 @@ fn test_save_and_load_data_integration() {
             my_day: false,
             due_date: None,
             note: String::new(),
+            completed_at: Some("2026-01-02T10:00".into()),
             list_id: "tasks".into(),
             created_at: "2026-01-01T00:00:00Z".into(),
         }],

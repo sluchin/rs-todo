@@ -34,6 +34,9 @@ pub struct Task {
     /// メモ.
     #[serde(default)]
     pub note: String,
+    /// 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未完了, または未設定なら `None`.
+    #[serde(default)]
+    pub completed_at: Option<String>,
     /// 属するリストの識別子.
     pub list_id: String,
     /// 作成日時 (ISO 8601).
@@ -177,6 +180,7 @@ mod tests {
                 my_day: true,
                 due_date: Some("2026-01-02".into()),
                 note: "2 本".into(),
+                completed_at: Some("2026-01-03T09:30".into()),
                 list_id: "list-1".into(),
                 created_at: "2026-01-01T00:00:00Z".into(),
             }],
@@ -247,6 +251,7 @@ mod tests {
         assert!(data.lists.is_empty());
         assert!(!data.tasks[0].completed);
         assert_eq!(data.tasks[0].due_date, None);
+        assert_eq!(data.tasks[0].completed_at, None);
     }
 
     #[test]
