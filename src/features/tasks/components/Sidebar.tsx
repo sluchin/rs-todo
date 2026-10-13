@@ -121,7 +121,7 @@ export default function Sidebar({
         <span className="nav-icon" aria-hidden="true">
           ✎
         </span>
-        <span className="nav-label">日報</span>
+        <span className="nav-label">日報・週報</span>
       </button>
     </nav>
   );

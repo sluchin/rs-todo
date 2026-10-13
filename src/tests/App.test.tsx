@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import { invoke } from "@tauri-apps/api/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
+import { addDays, weekRange } from "../features/tasks/report";
 import { todayString } from "../features/tasks/taskLogic";
 import type { TodoData } from "../features/tasks/types";
 
@@ -264,10 +265,10 @@ describe("App", () => {
       configurable: true,
       value: { writeText },
     });
-    await user.click(await screen.findByRole("button", { name: "日報" }));
-    const dialog = screen.getByRole("dialog", { name: "日報" });
+    await user.click(await screen.findByRole("button", { name: "日報・週報" }));
+    const dialog = screen.getByRole("dialog", { name: "日報・週報" });
     const text = within(dialog).getByLabelText(
-      "日報の内容",
+      "レポートの内容",
     ) as HTMLTextAreaElement;
     expect(text.value).toContain(`# 日報 ${todayString()}`);
 
@@ -299,6 +300,7 @@ describe("App", () => {
       ),
     );
     expect(mockedInvoke).toHaveBeenCalledWith("save_report", {
+      kind: "daily",
       date: todayString(),
       content: text.value,
     });
@@ -307,9 +309,51 @@ describe("App", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).toBeNull();
-    await user.click(screen.getByRole("button", { name: "日報" }));
+    await user.click(screen.getByRole("button", { name: "日報・週報" }));
     await user.click(screen.getByRole("button", { name: "閉じる" }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("正常系: 週報に切り替えると、週の範囲で表示し、週単位で日付を動かし、週の最初の日の名前で保存する", async () => {
+    const user = await renderApp();
+    await user.click(await screen.findByRole("button", { name: "日報・週報" }));
+    const dialog = screen.getByRole("dialog", { name: "日報・週報" });
+    const text = within(dialog).getByLabelText(
+      "レポートの内容",
+    ) as HTMLTextAreaElement;
+
+    await user.selectOptions(within(dialog).getByLabelText("種類"), "weekly");
+    expect(text.value).toMatch(
+      /^# 週報 \d{4}-\d{2}-\d{2} 〜 \d{4}-\d{2}-\d{2}/,
+    );
+    const dateInput = within(dialog).getByLabelText(
+      "週報の日付",
+    ) as HTMLInputElement;
+    const before = dateInput.value;
+    await user.click(within(dialog).getByRole("button", { name: "前の週" }));
+    expect(dateInput.value).toBe(addDays(before, -7));
+    await user.click(within(dialog).getByRole("button", { name: "次の週" }));
+    expect(dateInput.value).toBe(before);
+
+    mockedInvoke.mockImplementation((cmd) =>
+      cmd === "save_report"
+        ? Promise.resolve("/d/reports/w.md")
+        : Promise.resolve(undefined),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "ファイルに保存" }),
+    );
+    await waitFor(() =>
+      expect(mockedInvoke).toHaveBeenCalledWith("save_report", {
+        kind: "weekly",
+        date: weekRange(before).start,
+        content: text.value,
+      }),
+    );
+
+    await user.selectOptions(within(dialog).getByLabelText("種類"), "daily");
+    expect(text.value).toContain("# 日報 ");
+    expect(within(dialog).getByRole("status")).toHaveTextContent("");
   });
 
   it("異常系: 日報のコピーや保存に失敗したら、メッセージを出す", async () => {
@@ -318,8 +362,8 @@ describe("App", () => {
       configurable: true,
       value: { writeText: vi.fn().mockRejectedValue(new Error("NG")) },
     });
-    await user.click(await screen.findByRole("button", { name: "日報" }));
-    const dialog = screen.getByRole("dialog", { name: "日報" });
+    await user.click(await screen.findByRole("button", { name: "日報・週報" }));
+    const dialog = screen.getByRole("dialog", { name: "日報・週報" });
     await user.click(within(dialog).getByRole("button", { name: "コピー" }));
     await waitFor(() =>
       expect(within(dialog).getByRole("status")).toHaveTextContent(

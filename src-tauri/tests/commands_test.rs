@@ -30,11 +30,13 @@ fn test_save_and_load_data_integration() {
     assert_eq!(load_data().unwrap(), data);
     assert!(dir.path().join("todo.json").exists());
 
-    let path = save_report("2026-01-05".into(), "# 日報".into()).unwrap();
+    let path = save_report("daily".into(), "2026-01-05".into(), "# 日報".into()).unwrap();
     assert_eq!(
         std::path::PathBuf::from(&path),
         dir.path().join("reports").join("report-2026-01-05.md")
     );
     assert_eq!(std::fs::read_to_string(path).unwrap(), "# 日報");
-    assert!(save_report("bad".into(), "x".into()).is_err());
+    assert!(save_report("daily".into(), "bad".into(), "x".into()).is_err());
+    let weekly = save_report("weekly".into(), "2026-01-05".into(), "# 週報".into()).unwrap();
+    assert!(weekly.ends_with("weekly-2026-01-05.md"));
 }

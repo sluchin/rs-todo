@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { addDays, buildDailyReport } from "../features/tasks/report";
+import {
+  addDays,
+  buildDailyReport,
+  buildWeeklyReport,
+  weekRange,
+} from "../features/tasks/report";
 import type { Task, TodoData } from "../features/tasks/types";
 
 /** テスト用のタスクを作る. */
@@ -122,5 +127,143 @@ describe("buildDailyReport", () => {
     expect(empty).toContain("# 日報 2026-01-11 (日)");
     expect(empty.match(/- なし/g)).toHaveLength(4);
     expect(empty).toContain("## 完了したタスク (0)");
+  });
+});
+
+describe("weekRange", () => {
+  it("正常系: 日付を含む週の月曜と日曜を返す。月曜・日曜・年またぎも正しい", () => {
+    // 2026-01-05 は月曜.
+    expect(weekRange("2026-01-05")).toEqual({
+      start: "2026-01-05",
+      end: "2026-01-11",
+    });
+    expect(weekRange("2026-01-11")).toEqual({
+      start: "2026-01-05",
+      end: "2026-01-11",
+    });
+    expect(weekRange("2026-01-07")).toEqual({
+      start: "2026-01-05",
+      end: "2026-01-11",
+    });
+    expect(weekRange("2026-01-01")).toEqual({
+      start: "2025-12-29",
+      end: "2026-01-04",
+    });
+  });
+});
+
+describe("buildWeeklyReport", () => {
+  // 週は 2026-01-05 (月) 〜 2026-01-11 (日). 来週は 01-12 〜 01-18.
+  const data: TodoData = {
+    lists: [{ id: "l1", name: "仕事" }],
+    tasks: [
+      task({
+        id: "m",
+        title: "月曜に完了",
+        completed: true,
+        completed_at: "2026-01-05T10:00",
+        list_id: "l1",
+        note: "メモ",
+      }),
+      task({
+        id: "m2",
+        title: "月曜の午後に完了",
+        completed: true,
+        completed_at: "2026-01-05T15:30",
+      }),
+      task({
+        id: "f",
+        title: "金曜に完了",
+        completed: true,
+        completed_at: "2026-01-09T09:00",
+      }),
+      task({
+        id: "prev",
+        title: "先週の完了",
+        completed: true,
+        completed_at: "2026-01-04T23:00",
+      }),
+      task({
+        id: "nxt",
+        title: "来週の完了",
+        completed: true,
+        completed_at: "2026-01-12T00:00",
+      }),
+      task({ id: "st1", title: "着手した", start_date: "2026-01-07" }),
+      task({
+        id: "st2",
+        title: "着手して完了",
+        start_date: "2026-01-06",
+        completed: true,
+        completed_at: "2026-01-08T10:00",
+      }),
+      task({ id: "st3", title: "先週に着手", start_date: "2026-01-02" }),
+      task({ id: "due", title: "今週が期限", due_date: "2026-01-10" }),
+      task({ id: "plan", title: "今週に予定", planned_date: "2026-01-06" }),
+      task({ id: "late", title: "遅れている", due_date: "2026-01-02" }),
+      task({
+        id: "n1",
+        title: "来週が期限",
+        due_date: "2026-01-18",
+        list_id: "unknown",
+      }),
+      task({ id: "n2", title: "来週に予定", planned_date: "2026-01-12" }),
+      task({ id: "far", title: "再来週", due_date: "2026-01-19" }),
+      task({ id: "none", title: "日付なし" }),
+    ],
+  };
+  const report = buildWeeklyReport(data, "2026-01-07");
+  const sectionOf = (title: string): string =>
+    report.split("\n## ").find((s) => s.startsWith(title)) ?? "";
+
+  it("正常系: 見出しに週の範囲が入る", () => {
+    expect(report.split("\n")[0]).toBe("# 週報 2026-01-05 〜 2026-01-11");
+  });
+
+  it("正常系: 完了したタスクを、完了日ごとの見出しの下に、時刻・リスト名・メモ付きで出す", () => {
+    expect(sectionOf("完了したタスク")).toBe(
+      [
+        "完了したタスク (4)",
+        "### 2026-01-05 (月)",
+        "- [x] 10:00 月曜に完了 [仕事]",
+        "  - メモ",
+        "- [x] 15:30 月曜の午後に完了 [タスク]",
+        "### 2026-01-08 (木)",
+        "- [x] 10:00 着手して完了 [タスク]",
+        "### 2026-01-09 (金)",
+        "- [x] 09:00 金曜に完了 [タスク]",
+        "",
+      ].join("\n"),
+    );
+    expect(report).not.toContain("先週の完了");
+    expect(report).not.toContain("来週の完了");
+  });
+
+  it("正常系: 着手したタスクを、着手日の順に出す (完了済みも含む)", () => {
+    const section = sectionOf("着手したタスク");
+    expect(section).toContain("着手したタスク (2)");
+    expect(section).toMatch(
+      /\[x\] 2026-01-06 着手して完了[\s\S]*\[ \] 2026-01-07 着手した/,
+    );
+    expect(section).not.toContain("先週に着手");
+  });
+
+  it("正常系: 未完了は期限か予定日が今週のもの。期限切れ・来週の予定はそれぞれ別の節", () => {
+    const week = sectionOf("未完了のタスク");
+    expect(week).toContain("未完了のタスク (2)");
+    expect(week).toContain("今週が期限");
+    expect(week).toContain("今週に予定");
+    expect(sectionOf("期限切れのタスク")).toContain("遅れている");
+    const next = sectionOf("来週の予定");
+    expect(next).toContain("来週の予定 (2)");
+    expect(next).toContain("来週が期限 [unknown]");
+    expect(next).toContain("来週に予定");
+    expect(report).not.toContain("再来週");
+    expect(report).not.toContain("日付なし");
+  });
+
+  it("正常系: 該当が無い節は「なし」と出す", () => {
+    const empty = buildWeeklyReport({ lists: [], tasks: [] }, "2026-01-07");
+    expect(empty.match(/- なし/g)).toHaveLength(5);
   });
 });
