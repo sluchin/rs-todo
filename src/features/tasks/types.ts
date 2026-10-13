@@ -3,6 +3,14 @@ export interface Subtask {
   id: string;
   title: string;
   completed: boolean;
+  /** 予定日 (`YYYY-MM-DD`). 未設定なら `null`. */
+  planned_date: string | null;
+  /** 着手日 (`YYYY-MM-DD`). 未設定なら `null`. */
+  start_date: string | null;
+  /** 期限 (`YYYY-MM-DD`). 未設定なら `null`. */
+  due_date: string | null;
+  /** 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未設定なら `null`. 完了を解除しても残す. */
+  completed_at: string | null;
 }
 
 /** 1 つのタスク. バックエンドの `Task` 構造体と同じフィールド名にする. */

@@ -78,14 +78,14 @@ export function nowLocalString(now: Date = new Date()): string {
  * 完了の状態を切り替えるときの変更内容を返します. 完了にするときに完了日が空なら, 完了した日時を
  * 記録します (入っていれば, そのまま). 未完了に戻すときも, 完了日は残します.
  *
- * @param task - 切り替えるタスク.
+ * @param task - 切り替えるタスク (サブタスクでもよい).
  * @param now - 現在の日時.
  * @returns `updateTask` に渡す変更内容.
  */
 export function toggleCompletedPatch(
-  task: Task,
+  task: Pick<Task, "completed" | "completed_at">,
   now: Date = new Date(),
-): Partial<Task> {
+): Partial<Pick<Task, "completed" | "completed_at">> {
   if (task.completed) {
     return { completed: false };
   }
@@ -245,7 +245,15 @@ export function filterByCompletedDate(
 
 /** 新しいサブタスクを作ります. */
 export function newSubtask(title: string): Subtask {
-  return { id: newId("sub"), title, completed: false };
+  return {
+    id: newId("sub"),
+    title,
+    completed: false,
+    planned_date: null,
+    start_date: null,
+    due_date: null,
+    completed_at: null,
+  };
 }
 
 /**

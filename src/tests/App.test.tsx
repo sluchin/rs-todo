@@ -185,6 +185,46 @@ describe("App", () => {
     expect(screen.queryByText(/☑/)).toBeNull();
   });
 
+  it("正常系: サブタスクにも予定日・着手日・期限・完了日を入れられる。完了にすると完了日が入り、解除しても残る", async () => {
+    const user = await renderApp();
+    await user.click(await screen.findByText("済んだこと"));
+    const detail = screen.getByRole("complementary", { name: "タスクの詳細" });
+    await user.type(
+      within(detail).getByLabelText("サブタスクを追加"),
+      "下調べ{Enter}",
+    );
+
+    expect(within(detail).getByLabelText("下調べ の日付")).toHaveTextContent(
+      "日付",
+    );
+    const field = (name: string) =>
+      within(detail).getByLabelText(`下調べ の${name}`) as HTMLInputElement;
+    fireEvent.change(field("予定日"), { target: { value: "2026-03-01" } });
+    fireEvent.change(field("着手日"), { target: { value: "2026-03-02" } });
+    fireEvent.change(field("期限"), { target: { value: "2026-03-03" } });
+    expect(field("予定日").value).toBe("2026-03-01");
+    expect(field("着手日").value).toBe("2026-03-02");
+    expect(field("期限").value).toBe("2026-03-03");
+    expect(within(detail).getByLabelText("下調べ の日付")).toHaveTextContent(
+      "予定日 2026-03-01 ・ 着手日 2026-03-02 ・ 期限 2026-03-03",
+    );
+
+    await user.click(
+      within(detail).getByRole("button", { name: "下調べ を完了にする" }),
+    );
+    expect(field("完了日").value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    const completedAt = field("完了日").value;
+    await user.click(
+      within(detail).getByRole("button", { name: "下調べ を未完了に戻す" }),
+    );
+    expect(field("完了日").value).toBe(completedAt);
+
+    fireEvent.change(field("予定日"), { target: { value: "" } });
+    fireEvent.change(field("完了日"), { target: { value: "" } });
+    expect(field("予定日").value).toBe("");
+    expect(field("完了日").value).toBe("");
+  });
+
   it("正常系: 予定日と着手日を入れられる", async () => {
     const user = await renderApp();
     await user.click(await screen.findByText("済んだこと"));

@@ -24,7 +24,8 @@ function taskLines(task: Task, listName: string, prefix: string): string[] {
   const due = task.due_date ? ` (期限: ${task.due_date})` : "";
   const lines = [`- ${prefix}${task.title} [${listName}]${due}`];
   for (const sub of task.subtasks) {
-    lines.push(`  - [${sub.completed ? "x" : " "}] ${sub.title}`);
+    const subDue = sub.due_date ? ` (期限: ${sub.due_date})` : "";
+    lines.push(`  - [${sub.completed ? "x" : " "}] ${sub.title}${subDue}`);
   }
   for (const note of task.note.split("\n")) {
     if (note.trim() !== "") lines.push(`  - ${note.trim()}`);

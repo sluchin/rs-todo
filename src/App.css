@@ -514,3 +514,36 @@ input[data-empty="true"]:not(:focus)::-webkit-datetime-edit {
 .subtasks .link-button {
   color: var(--muted);
 }
+
+.subtasks li {
+  flex-wrap: wrap;
+}
+
+.subtask-dates {
+  flex-basis: 100%;
+  padding-left: 30px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.subtask-dates summary {
+  cursor: pointer;
+}
+
+.subtask-date {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.subtask-date input {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  text-align: right;
+}

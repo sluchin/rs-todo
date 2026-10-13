@@ -1,8 +1,23 @@
 import type { ReactElement } from "react";
 import DateInput from "../../../components/DateInput";
 import { useState } from "react";
-import { newSubtask } from "../taskLogic";
+import { newSubtask, toggleCompletedPatch } from "../taskLogic";
 import type { Subtask, Task } from "../types";
+
+/** サブタスクの日付の項目. 詳細ペインのタスクの日付と同じ種類を, 同じ順に並べる. */
+const SUBTASK_DATE_FIELDS = [
+  { key: "planned_date", label: "予定日", type: "date" },
+  { key: "start_date", label: "着手日", type: "date" },
+  { key: "due_date", label: "期限", type: "date" },
+  { key: "completed_at", label: "完了日", type: "datetime-local" },
+] as const;
+
+/** サブタスクに入っている日付を, 一行の文字列にします (閉じているときの表示). 無ければ空文字. */
+function subtaskDateSummary(s: Subtask): string {
+  return SUBTASK_DATE_FIELDS.filter((f) => s[f.key])
+    .map((f) => `${f.label} ${String(s[f.key]).slice(0, 10)}`)
+    .join(" ・ ");
+}
 
 /** `TaskDetail` の props. */
 interface TaskDetailProps {
@@ -52,7 +67,7 @@ export default function TaskDetail({
                 className={`circle${s.completed ? " checked" : ""}`}
                 aria-label={`${s.title} を${s.completed ? "未完了に戻す" : "完了にする"}`}
                 aria-pressed={s.completed}
-                onClick={() => patchSubtask(s.id, { completed: !s.completed })}
+                onClick={() => patchSubtask(s.id, toggleCompletedPatch(s))}
               >
                 {s.completed ? "✓" : ""}
               </button>
@@ -71,6 +86,24 @@ export default function TaskDetail({
               >
                 ×
               </button>
+              <details className="subtask-dates">
+                <summary aria-label={`${s.title} の日付`}>
+                  {subtaskDateSummary(s) || "日付"}
+                </summary>
+                {SUBTASK_DATE_FIELDS.map((f) => (
+                  <label key={f.key} className="subtask-date">
+                    <span>{f.label}</span>
+                    <DateInput
+                      type={f.type}
+                      label={`${s.title} の${f.label}`}
+                      value={s[f.key] ?? ""}
+                      onChange={(v) =>
+                        patchSubtask(s.id, { [f.key]: v || null })
+                      }
+                    />
+                  </label>
+                ))}
+              </details>
             </li>
           ))}
         </ul>

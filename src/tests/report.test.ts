@@ -279,15 +279,31 @@ describe("レポートのサブタスク", () => {
           my_day: true,
           note: "急ぐ",
           subtasks: [
-            { id: "1", title: "構成", completed: true },
-            { id: "2", title: "清書", completed: false },
+            {
+              id: "1",
+              title: "構成",
+              completed: true,
+              planned_date: null,
+              start_date: null,
+              due_date: null,
+              completed_at: null,
+            },
+            {
+              id: "2",
+              title: "清書",
+              completed: false,
+              planned_date: null,
+              start_date: null,
+              due_date: "2026-01-09",
+              completed_at: null,
+            },
           ],
         }),
       ],
     };
     const daily = buildDailyReport(data, "2026-01-05");
     expect(daily).toContain(
-      "- [ ] 資料 [タスク]\n  - [x] 構成\n  - [ ] 清書\n  - 急ぐ",
+      "- [ ] 資料 [タスク]\n  - [x] 構成\n  - [ ] 清書 (期限: 2026-01-09)\n  - 急ぐ",
     );
     const weekly = buildWeeklyReport(
       {
@@ -296,6 +312,6 @@ describe("レポートのサブタスク", () => {
       },
       "2026-01-05",
     );
-    expect(weekly).toContain("  - [x] 構成\n  - [ ] 清書");
+    expect(weekly).toContain("  - [x] 構成\n  - [ ] 清書 (期限: 2026-01-09)");
   });
 });
