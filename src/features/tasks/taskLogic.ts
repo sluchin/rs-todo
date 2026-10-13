@@ -44,6 +44,30 @@ export function todayString(now: Date = new Date()): string {
   return `${now.getFullYear()}-${m}-${d}`;
 }
 
+/** ローカル時間の日時を `YYYY-MM-DDTHH:mm` で返します (`datetime-local` の入力欄の値と同じ形式). */
+export function nowLocalString(now: Date = new Date()): string {
+  const h = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  return `${todayString(now)}T${h}:${min}`;
+}
+
+/**
+ * 完了の状態を切り替えるときの変更内容を返します. 完了にするときは完了した日時を記録し,
+ * 未完了に戻すときは消します.
+ *
+ * @param task - 切り替えるタスク.
+ * @param now - 現在の日時.
+ * @returns `updateTask` に渡す変更内容.
+ */
+export function toggleCompletedPatch(
+  task: Task,
+  now: Date = new Date(),
+): Partial<Task> {
+  return task.completed
+    ? { completed: false, completed_at: null }
+    : { completed: true, completed_at: nowLocalString(now) };
+}
+
 /** 重複しにくい ID を作ります. */
 export function newId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -115,6 +139,7 @@ export function createTask(
     my_day: view === "my-day",
     due_date: view === "my-day" || view === "planned" ? todayString(now) : null,
     note: "",
+    completed_at: null,
     list_id: isSmart ? DEFAULT_LIST_ID : view,
     created_at: now.toISOString(),
   };

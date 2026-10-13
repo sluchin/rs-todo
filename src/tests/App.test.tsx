@@ -1,4 +1,10 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { invoke } from "@tauri-apps/api/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -20,6 +26,7 @@ const DATA: TodoData = {
       my_day: false,
       due_date: "2000-01-01",
       note: "",
+      completed_at: null,
       list_id: "l1",
       created_at: "2026-01-01T00:00:00.000Z",
     },
@@ -31,6 +38,7 @@ const DATA: TodoData = {
       my_day: true,
       due_date: todayString(),
       note: "",
+      completed_at: "2026-01-03T09:30",
       list_id: "tasks",
       created_at: "2026-01-02T00:00:00.000Z",
     },
@@ -100,6 +108,20 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("正常系: 完了にすると完了日が入り、未完了に戻すと消える。未完了のタスクの詳細には完了日がない", async () => {
+    const user = await renderApp();
+    await user.click(
+      await screen.findByRole("button", { name: "未完了に戻す" }),
+    );
+    await user.click(screen.getByText("済んだこと"));
+    expect(screen.queryByLabelText("完了日")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "完了にする" }));
+    expect((screen.getByLabelText("完了日") as HTMLInputElement).value).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/,
+    );
+  });
+
   it("正常系: 完了済みの一覧を折りたためる", async () => {
     const user = await renderApp();
     const toggle = await screen.findByRole("button", { name: /完了済み 1/ });
@@ -128,6 +150,13 @@ describe("App", () => {
 
     await user.type(within(detail).getByLabelText("メモ"), "m");
     expect(within(detail).getByLabelText("メモ")).toHaveValue("m");
+
+    const completedAt = within(detail).getByLabelText("完了日");
+    expect(completedAt).toHaveValue("2026-01-03T09:30");
+    fireEvent.change(completedAt, { target: { value: "2026-02-01T08:00" } });
+    expect(completedAt).toHaveValue("2026-02-01T08:00");
+    fireEvent.change(completedAt, { target: { value: "" } });
+    expect(completedAt).toHaveValue("");
 
     const due = within(detail).getByLabelText("期限");
     await user.clear(due);

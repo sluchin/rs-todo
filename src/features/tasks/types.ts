@@ -8,6 +8,8 @@ export interface Task {
   /** 期限 (`YYYY-MM-DD`). 未設定なら `null`. */
   due_date: string | null;
   note: string;
+  /** 完了した日時 (ローカル時間の `YYYY-MM-DDTHH:mm`). 未完了、または未設定なら `null`. */
+  completed_at: string | null;
   list_id: string;
   /** 作成日時 (ISO 8601). */
   created_at: string;

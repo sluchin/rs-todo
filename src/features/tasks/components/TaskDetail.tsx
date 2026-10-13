@@ -10,7 +10,7 @@ interface TaskDetailProps {
 }
 
 /**
- * 右側の詳細ペイン. 題名, 今日の予定, 期限, メモを編集し, タスクを削除する.
+ * 右側の詳細ペイン. 題名, 今日の予定, 期限, 完了日 (完了したタスクだけ), メモを編集し, タスクを削除する.
  */
 export default function TaskDetail({
   task,
@@ -43,6 +43,17 @@ export default function TaskDetail({
           onChange={(e) => onUpdate({ due_date: e.target.value || null })}
         />
       </label>
+      {task.completed && (
+        <label className="detail-row">
+          <span>✓ 完了日</span>
+          <input
+            type="datetime-local"
+            aria-label="完了日"
+            value={task.completed_at ?? ""}
+            onChange={(e) => onUpdate({ completed_at: e.target.value || null })}
+          />
+        </label>
+      )}
       <textarea
         className="detail-note"
         aria-label="メモ"

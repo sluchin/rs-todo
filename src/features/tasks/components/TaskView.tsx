@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { useState } from "react";
-import { splitTasks, viewTitle } from "../taskLogic";
+import { splitTasks, toggleCompletedPatch, viewTitle } from "../taskLogic";
 import type { Task, TaskList, ViewId } from "../types";
 import TaskItem from "./TaskItem";
 
@@ -47,7 +47,7 @@ export default function TaskView({
       task={t}
       selected={t.id === selectedTaskId}
       onSelect={() => onSelectTask(t.id)}
-      onToggleCompleted={() => onUpdateTask(t.id, { completed: !t.completed })}
+      onToggleCompleted={() => onUpdateTask(t.id, toggleCompletedPatch(t))}
       onToggleImportant={() => onUpdateTask(t.id, { important: !t.important })}
     />
   );

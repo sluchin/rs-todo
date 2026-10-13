@@ -8,6 +8,8 @@ import {
   inView,
   isOverdue,
   newId,
+  nowLocalString,
+  toggleCompletedPatch,
   removeList,
   splitTasks,
   todayString,
@@ -27,6 +29,7 @@ function task(patch: Partial<Task> = {}): Task {
     my_day: false,
     due_date: null,
     note: "",
+    completed_at: null,
     list_id: DEFAULT_LIST_ID,
     created_at: "2026-01-01T00:00:00.000Z",
     ...patch,
@@ -40,6 +43,31 @@ describe("todayString", () => {
 
   it("正常系: 引数を省略すると現在の日付を返す", () => {
     expect(todayString()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("nowLocalString / toggleCompletedPatch", () => {
+  it("正常系: ローカルの日時を YYYY-MM-DDTHH:mm で返す", () => {
+    expect(nowLocalString(NOW)).toBe("2026-01-05T09:00");
+    expect(nowLocalString()).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+  });
+
+  it("正常系: 完了にすると完了した日時を記録し、未完了に戻すと消す", () => {
+    expect(toggleCompletedPatch(task(), NOW)).toEqual({
+      completed: true,
+      completed_at: "2026-01-05T09:00",
+    });
+    expect(
+      toggleCompletedPatch(
+        task({ completed: true, completed_at: "2026-01-05T09:00" }),
+        NOW,
+      ),
+    ).toEqual({ completed: false, completed_at: null });
+    expect(toggleCompletedPatch(task()).completed_at).toMatch(/^\d{4}-/);
+  });
+
+  it("正常系: 新しいタスクは完了日がない", () => {
+    expect(createTask("a", DEFAULT_LIST_ID, NOW).completed_at).toBeNull();
   });
 });
 
