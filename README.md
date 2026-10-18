@@ -27,9 +27,18 @@ Microsoft To Do 風の見た目をした、TODO アプリケーション。Tauri
 
 Linux では、Tauri のビルドに `libwebkit2gtk-4.1-dev` などのシステムライブラリが必要。
 
+## ログ
+
+ログは、標準エラー出力と、ログファイルに出ます。フロントエンド (`loglevel`) のログも、バックエンドに転送して (`log_frontend_message`)、同じファイルに残します。
+
+- ログファイル: `<データディレクトリ>/rstodo/logs/rstodo.log` (Linux は `~/.local/share/rstodo/logs/`、Windows は `%LOCALAPPDATA%\rstodo\logs\`、macOS は `~/Library/Application Support/rstodo/logs/`)。5 MB を超えると世代送りして、3 世代 (`.1` から `.3`) を残します。
+- レベル: デバッグ版 (`npm run tauri:dev`) はデバッグ以上、リリース版 (`npm run tauri:build`) は情報 (最低限)、警告、エラーを出します。判定は、ログの初期化の中でします (Rust は `src-tauri/src/logging.rs` の `default_level`、フロントエンドは `src/services/logForwarder.ts` の `setupLogging`)。
+- レベルを変えるとき: `RUST_LOG=debug npm run tauri:dev` のように、環境変数 `RUST_LOG` で上書きします (リリース版でも効きます)。
+- ログは、Rust は `log::debug!` / `info!` / `warn!` / `error!`、フロントエンドは `loglevel` の `log.debug` / `info` / `warn` / `error` を使います。パスワードなどの秘密は書きません。
+
 ## 構成
 
 - `src/`: フロントエンド。`features/tasks/{components,hooks,types.ts,taskLogic.ts}` に機能をまとめる。テストは `src/tests/`。
-- `src-tauri/`: バックエンド。`src/commands/store.rs` がデータの保存・読み込み。
+- `src-tauri/`: バックエンド。`src/commands/store.rs` がデータの保存・読み込み。`src/logging.rs` がログ (テストは `src-tauri/tests/`)。
 - `TODO.md`: 今後の予定 (クラウド同期と Android アプリの検討など)。
 - `src-tauri/icons/`: アプリのアイコン。`public/icon.svg` が元の絵 (`npx tauri icon` で作り直せる)。

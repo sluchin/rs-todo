@@ -5,6 +5,9 @@
 /// フロントエンドと通信する IPC コマンドを提供するモジュール.
 pub mod commands;
 
+/// ログの初期化 (標準エラー出力とログファイル) と, フロントエンドのログの記録.
+pub mod logging;
+
 /// Tauri アプリケーションをビルドして実行します.
 ///
 /// # Panics
@@ -14,8 +17,11 @@ pub mod commands;
 #[cfg(not(tarpaulin_include))]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    logging::init_logging();
+    log::info!("Started rstodo {}", env!("CARGO_PKG_VERSION"));
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
+            logging::log_frontend_message,
             commands::store::load_data,
             commands::store::save_data,
             commands::report::save_report,
