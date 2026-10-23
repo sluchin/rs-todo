@@ -102,6 +102,16 @@ fn test_rotating_file_small_writes_do_not_rotate() {
 }
 
 #[test]
+fn test_rotating_file_flush_writes_to_disk() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("app.log");
+    let mut file = RotatingFile::open(&path, 1024, 3).unwrap();
+    file.write_all(b"line\n").unwrap();
+    file.flush().unwrap();
+    assert_eq!(fs::read_to_string(&path).unwrap(), "line\n");
+}
+
+#[test]
 fn test_tee_writes_to_both_and_tolerates_failure() {
     struct Failing;
     impl Write for Failing {

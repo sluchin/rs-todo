@@ -15,15 +15,15 @@ Microsoft To Do 風の見た目をした、TODO アプリケーション。Tauri
 
 ## 開発
 
-| 目的                | コマンド                                                                      |
-| ------------------- | ----------------------------------------------------------------------------- |
-| 開発サーバー        | `npm run tauri:dev`                                                           |
-| ビルド              | `npm run build`                                                               |
-| テスト              | `npm run test` (Vitest)、`npm run test:rust` (cargo test)                     |
-| 整形                | `npm run format` (Prettier + cargo fmt)                                       |
-| 整形チェック + 検査 | `npm run check` (format:check、eslint、clippy、vitest、cargo test。CI と同じ) |
-| カバレッジ          | `npm run coverage:fe` (Vitest)、`npm run coverage:be` (cargo tarpaulin)       |
-| ドキュメント        | `npm run doc` (typedoc、cargo doc)                                            |
+| 目的                | コマンド                                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 開発サーバー        | `npm run tauri:dev`                                                                                                                         |
+| ビルド              | `npm run build`                                                                                                                             |
+| テスト              | `npm run test` (Vitest)、`npm run test:rust` (cargo test)                                                                                   |
+| 整形                | `npm run format` (Prettier + cargo fmt)                                                                                                     |
+| 整形チェック + 検査 | `npm run check` (format:check、eslint、clippy、vitest、cargo test。CI と同じ)                                                               |
+| カバレッジ          | `npm run coverage:fe` (Vitest)、`npm run coverage:be` (cargo tarpaulin)。どちらも 100% を下回ると失敗する (CI の `coverage` のジョブも同じ) |
+| ドキュメント        | `npm run doc` (typedoc、cargo doc)                                                                                                          |
 
 Linux では、Tauri のビルドに `libwebkit2gtk-4.1-dev` などのシステムライブラリが必要。
 
