@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       # リポジトリを取得する.
       - uses: actions/checkout@v7
@@ -61,7 +61,7 @@ jobs:
     needs: check
     # main への push のときだけ公開する (pull request では公開しない).
     if: github.event_name == 'push'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       pages: write
