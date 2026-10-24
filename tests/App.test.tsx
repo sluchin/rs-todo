@@ -8,10 +8,10 @@ import {
 import userEvent from "@testing-library/user-event";
 import { invoke } from "@tauri-apps/api/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import App from "../App";
-import { addDays, weekRange } from "../features/tasks/report";
-import { todayString } from "../features/tasks/taskLogic";
-import type { TodoData } from "../features/tasks/types";
+import App from "@/App";
+import { addDays, weekRange } from "@/features/tasks/report";
+import { todayString } from "@/features/tasks/taskLogic";
+import type { TodoData } from "@/features/tasks/types";
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
 const mockedInvoke = vi.mocked(invoke);

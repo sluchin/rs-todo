@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import DateInput from "../components/DateInput";
+import DateInput from "@/components/DateInput";
 
 describe("DateInput", () => {
   it("正常系: 値が空のときだけ data-empty が付き、値があると付かない", () => {

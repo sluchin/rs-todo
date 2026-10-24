@@ -4,8 +4,8 @@ import {
   buildDailyReport,
   buildWeeklyReport,
   weekRange,
-} from "../features/tasks/report";
-import type { Task, TodoData } from "../features/tasks/types";
+} from "@/features/tasks/report";
+import type { Task, TodoData } from "@/features/tasks/types";
 
 /** テスト用のタスクを作る. */
 function task(patch: Partial<Task>): Task {

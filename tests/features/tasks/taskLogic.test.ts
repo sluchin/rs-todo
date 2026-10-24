@@ -18,8 +18,8 @@ import {
   splitTasks,
   todayString,
   viewTitle,
-} from "../features/tasks/taskLogic";
-import type { Task } from "../features/tasks/types";
+} from "@/features/tasks/taskLogic";
+import type { Task } from "@/features/tasks/types";
 
 const NOW = new Date(2026, 0, 5, 9, 0, 0);
 

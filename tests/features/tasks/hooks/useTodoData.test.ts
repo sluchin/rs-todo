@@ -2,8 +2,8 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { invoke } from "@tauri-apps/api/core";
 import log from "loglevel";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useTodoData } from "../features/tasks/hooks/useTodoData";
-import { DEFAULT_LIST_ID } from "../features/tasks/taskLogic";
+import { useTodoData } from "@/features/tasks/hooks/useTodoData";
+import { DEFAULT_LIST_ID } from "@/features/tasks/taskLogic";
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
 const mockedInvoke = vi.mocked(invoke);
