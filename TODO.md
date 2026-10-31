@@ -25,14 +25,14 @@
 - [ ] 端末の時計のずれに備える: 同期のとき、Drive の `modifiedTime` との差を見て補正するか、論理時計 (連番) を併用する
 - [ ] マージは、Tauri に依存しない純粋な関数 (Rust) にして、`cargo test` で検証する (同時編集・削除と編集の競合・時計のずれ)
 - [ ] 旧形式 (`updated_at` が無い) のデータを読み込めるようにする (`#[serde(default)]`。無ければ、読み込んだ日時にする)
-- [ ] 同じファイルを 2 台が同時に更新しないよう, Drive の `headRevisionId` (または ETag) で, 楽観的に排他する。食い違ったら、再取得してマージし直す
+- [ ] 同じファイルを 2 台が同時に更新しないよう、Drive の `headRevisionId` (または ETag) で、楽観的に排他する。食い違ったら、再取得してマージし直す
 
 ### Google 認証 (OAuth 2.0)
 
 - [ ] Google Cloud でプロジェクトを作り、Drive API を有効にする。OAuth の同意画面を設定する (スコープは `drive.appdata` だけ)
 - [ ] **注意**: 同意画面が「テスト」状態だと、リフレッシュトークンが 7 日で切れる。個人で使うだけでも、「本番」に公開しておく (`drive.appdata` は機密性の低いスコープなので、審査は軽い)
 - [ ] デスクトップ (Windows / macOS / Linux): 「インストール型アプリ」の OAuth クライアントを作り、PKCE + ループバック (`http://127.0.0.1:<ポート>`) でログインする (例: `tauri-plugin-oauth`)。ブラウザで同意させる
-- [ ] Android: Android 用の OAuth クライアントを作る (パッケージ名と、署名の SHA-1 フィンガープリントが要る)。Credential Manager / Google Sign-In か, カスタムスキームのリダイレクト (`tauri-plugin-deep-link`) でログインする。**デバッグ用と、リリース用で、署名が違う**ので、クライアント ID を両方登録する
+- [ ] Android: Android 用の OAuth クライアントを作る (パッケージ名と、署名の SHA-1 フィンガープリントが要る)。Credential Manager / Google Sign-In か、カスタムスキームのリダイレクト (`tauri-plugin-deep-link`) でログインする。**デバッグ用と、リリース用で、署名が違う**ので、クライアント ID を両方登録する
 - [ ] トークンの保存: リフレッシュトークンは、OS の安全な保管場所に置く (デスクトップ: `keyring` クレート、Android: Keystore)。`todo.json` や `config.json` には、書かない
 - [ ] ログアウト (トークンの削除と、Google 側の取り消し) を用意する
 
@@ -41,7 +41,7 @@
 - [ ] 同期の契機: 起動時、データの変更から数秒後 (デバウンス)、手動の「今すぐ同期」ボタン、一定間隔 (アプリが前面にあるとき)
 - [ ] 流れ: Drive から取得 → ローカルとマージ → 変わっていれば保存・アップロード
 - [ ] 画面に、同期の状態 (最終同期の時刻・同期中・失敗・オフライン) を出す。失敗しても、ローカルの操作は止めない
-- [ ] 同期の IPC コマンド (`sync_now`, `sync_status`, `sign_in`, `sign_out`) を足し、`generate_handler!` に登録する。権限 (`capabilities/default.json`) も足す
+- [ ] 同期の IPC コマンド (`sync_now`、`sync_status`、`sign_in`、`sign_out`) を足し、`generate_handler!` に登録する。権限 (`capabilities/default.json`) も足す
 - [ ] ネットワーク周りは、テストしやすい形にする (Drive のクライアントを trait にして、テストでは差し替える)
 - [ ] 暗号化 (任意): `appDataFolder` のデータは、Google 側では暗号化されるが、端末側の鍵で暗号化していない。必要なら、パスフレーズで暗号化してから送る
 
@@ -99,7 +99,7 @@ Android より後にする。同期とマージが Android で動いてから、
 
 - [x] `v*` タグの push で、`release.yml` が、3 OS 向けにビルドして、GitHub Releases に**ドラフト**を作る (済み)
 - [ ] ドラフトを確認して、手動で「公開」する運用にする。リリースノート (変更点) を書く
-- [ ] ファイル名に、OS と形式が分かる名前を付ける (例: `rstodo_0.1.0_windows_x64.msi`, `..._macos_universal.dmg`, `..._linux_amd64.AppImage`)
+- [ ] ファイル名に、OS と形式が分かる名前を付ける (例: `rstodo_0.1.0_windows_x64.msi`、`..._macos_universal.dmg`、`..._linux_amd64.AppImage`)
 - [ ] ダウンロード用のページ (GitHub Pages、任意): 今 Pages には、API ドキュメント (typedoc / cargo doc) を公開している。同じサイトに、「ダウンロード」のページを足して、`https://github.com/<owner>/rs-todo/releases/latest` へのリンクと、OS ごとの案内を置く。**インストーラの実体は、Pages には置かず、Releases に置く** (Pages には、サイズと帯域の制限がある)
 - [ ] 署名: 署名していないと、OS が警告を出す。**macOS**: Apple Developer ID の署名と公証 (notarization) が要る (年 99 ドル)。しないと「壊れている」と表示され、右クリックから開く必要がある。**Windows**: コード署名証明書 (有料) が無いと、SmartScreen が警告を出す (使われるうちに、警告は減る)。**Linux**: 署名は不要 (AppImage / deb / rpm)
 - [ ] 自動更新 (任意): `tauri-plugin-updater` を使う。更新用の署名鍵 (OS の署名とは別) を作り、秘密鍵は、GitHub のシークレットに置く。`tauri-action` が、`latest.json` を Releases に付ける。アプリが、それを見て、更新を知らせる
