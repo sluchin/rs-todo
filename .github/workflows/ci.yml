@@ -189,7 +189,7 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           name: github-pages
-          path: combined_docs/
+          path: build/docs/
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v5
