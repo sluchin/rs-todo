@@ -40,5 +40,5 @@ Linux では、Tauri のビルドに `libwebkit2gtk-4.1-dev` などのシステ�
 
 - `src/`: フロントエンド。`features/tasks/{components,hooks,types.ts,taskLogic.ts}` に機能をまとめる。テストは `tests/` (`src/` と同じ構成。`src/features/tasks/report.ts` のテストは `tests/features/tasks/report.test.ts`。`src/` は `@/` で参照する)。
 - `src-tauri/`: バックエンド。`src/commands/store.rs` がデータの保存・読み込み。`src/logging.rs` がログ (テストは `src-tauri/tests/`)。
-- `TODO.md`: 今後の予定 (クラウド同期と Android アプリの検討など)。
+- [TODO.md](TODO.md): 今後の予定 (クラウド同期と Android アプリの検討など)。
 - `src-tauri/icons/`: アプリのアイコン。`public/icon.svg` が元の絵 (`npx tauri icon` で作り直せる)。
