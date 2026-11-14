@@ -76,7 +76,7 @@ export function nowLocalString(now: Date = new Date()): string {
 
 /**
  * 完了の状態を切り替えるときの変更内容を返します. 完了にするときに完了日が空なら, 完了した日時を
- * 記録します (入っていれば, そのまま). 未完了に戻すときも, 完了日は残します.
+ * 記録します (入っていればそのまま). 未完了に戻すときも完了日は残します.
  *
  * @param task - 切り替えるタスク (サブタスクでもよい).
  * @param now - 現在の日時.
@@ -165,7 +165,7 @@ export function sortTasks(tasks: Task[], order: SortOrder): Task[] {
 }
 
 /**
- * ビューのタスクを, 未完了と完了に分けて返します. どちらも, 指定した順に並べます.
+ * ビューのタスクを, 未完了と完了に分けて返します. どちらも指定した順に並べます.
  */
 export function splitTasks(
   tasks: Task[],
@@ -222,7 +222,7 @@ export function createTask(
 }
 
 /**
- * 完了日 (日付の部分) が範囲に入るタスクだけを返します. 範囲が空 (どちらも空文字) なら, すべて返します.
+ * 完了日 (日付の部分) が範囲に入るタスクだけを返します. 範囲が空 (どちらも空文字) ならすべて返します.
  * 範囲を指定したときは, 完了日の無いタスクを除きます.
  *
  * @param tasks - 絞り込むタスク.
@@ -283,7 +283,7 @@ export function isOverdue(task: Task, today: string = todayString()): boolean {
   return !task.completed && task.due_date !== null && task.due_date < today;
 }
 
-/** リストを削除します. 属していたタスクも, 削除します. */
+/** リストを削除します. 属していたタスクも削除します. */
 export function removeList(data: TodoData, listId: string): TodoData {
   return {
     lists: data.lists.filter((l) => l.id !== listId),

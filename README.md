@@ -1,16 +1,16 @@
 # rstodo
 
-Microsoft To Do 風の見た目をした、TODO アプリケーション。Tauri v2 (バックエンド: Rust、フロントエンド: React 19 / TypeScript / Vite) で作る。
+Microsoft To Do 風の見た目の TODO アプリケーション。Tauri v2 (バックエンド: Rust、フロントエンド: React 19 / TypeScript / Vite) で作る。
 
 ## 機能
 
 - 左: スマートリスト (今日の予定・重要・計画済み・すべて・完了済み)、既定のリスト「タスク」、自分のリスト
 - 中央: タスクの追加、完了 (丸)、重要 (星)、期限の表示、完了済みの折りたたみ
-- 右: 詳細ペイン (題名・サブタスク・今日の予定・予定日・着手日・期限・完了日・メモの編集、削除)。完了日は常に表示する。完了にしたとき完了日が空なら、その日時を記録する (入っていれば変えない。完了を解除しても残す)
-- サブタスク: 詳細ペインでタスクごとに追加・完了・題名の変更・削除ができる。サブタスクにも、タスクと同じ予定日・着手日・期限・完了日 (完了にしたとき空なら記録、解除しても残す) を入れられる。一覧に「☑ 完了数/全体」を出し、日報・週報にもタスクの下に出す
+- 右: 詳細ペイン (題名・サブタスク・今日の予定・予定日・着手日・期限・完了日・メモの編集、削除)。完了日は常に表示する。完了にしたときに完了日が空なら、その日時を記録する (入っていれば変えない。完了を解除しても残す)
+- サブタスク: 詳細ペインで、タスクごとに追加・完了・題名の変更・削除ができる。サブタスクにも、タスクと同じ予定日・着手日・期限・完了日 (完了にしたときに空なら記録し、解除しても残す) を入れられる。一覧に「☑ 完了数/全体」を出し、日報・週報ではタスクの下に出す
 - 完了済み: 完了したタスクだけを表示し、完了日の範囲 (開始〜終了) で絞り込める
 - 並べ替え: 作成日・予定日・着手日・期限・完了日・題名の昇順 / 降順。値の無いタスクは最後に並ぶ
-- 日報・週報: サイドバーの「日報・週報」から、日付ごとの日報 (Markdown) を表示する。内容は、完了したタスク・未完了のタスク (今日の予定か当日が期限)・期限切れ・明日以降の予定。クリップボードへのコピーと、`<データのディレクトリ>/reports/report-YYYY-MM-DD.md` への保存ができる。週報は、選んだ日を含む週 (月曜〜日曜) の、完了したタスク (完了日ごと)・着手したタスク・未完了のタスク・期限切れ・来週の予定を出し、`weekly-YYYY-MM-DD.md` (週の最初の日) に保存する
+- 日報・週報: サイドバーの「日報・週報」から日付ごとの日報 (Markdown) を表示する。内容は、完了したタスク・未完了のタスク (今日の予定か当日が期限)・期限切れ・明日以降の予定。クリップボードへのコピーと、`<データのディレクトリ>/reports/report-YYYY-MM-DD.md` への保存ができる。週報は、選んだ日を含む週 (月曜〜日曜) の、完了したタスク (完了日ごと)・着手したタスク・未完了のタスク・期限切れ・来週の予定を出し、`weekly-YYYY-MM-DD.md` (週の最初の日) に保存する
 - データは JSON ファイル (`<OS のデータディレクトリ>/rstodo/todo.json`) に保存する。環境変数 `RSTODO_DATA_DIR` で保存先のディレクトリを変えられる。
 
 ## 開発
@@ -25,16 +25,16 @@ Microsoft To Do 風の見た目をした、TODO アプリケーション。Tauri
 | カバレッジ          | `npm run coverage:fe` (Vitest)、`npm run coverage:be` (cargo tarpaulin)。どちらも 100% を下回ると失敗する (CI の `coverage` のジョブも同じ) |
 | ドキュメント        | `npm run doc` (typedoc、cargo doc)                                                                                                          |
 
-Linux では、Tauri のビルドに `libwebkit2gtk-4.1-dev` などのシステムライブラリが必要。
+Linux では、Tauri のビルドに `libwebkit2gtk-4.1-dev` などのシステムライブラリが要る。
 
 ## ログ
 
-ログは、標準エラー出力と、ログファイルに出ます。フロントエンド (`loglevel`) のログも、バックエンドに転送して (`log_frontend_message`)、同じファイルに残します。
+ログは、標準エラー出力とログファイルに出ます。フロントエンド (`loglevel`) のログもバックエンドに転送して (`log_frontend_message`)、同じファイルに残します。
 
 - ログファイル: `<データディレクトリ>/rstodo/logs/rstodo.log` (Linux は `~/.local/share/rstodo/logs/`、Windows は `%LOCALAPPDATA%\rstodo\logs\`、macOS は `~/Library/Application Support/rstodo/logs/`)。5 MB を超えると世代送りして、3 世代 (`.1` から `.3`) を残します。
-- レベル: デバッグ版 (`npm run tauri:dev`) はデバッグ以上、リリース版 (`npm run tauri:build`) は情報 (最低限)、警告、エラーを出します。判定は、ログの初期化の中でします (Rust は `src-tauri/src/logging.rs` の `default_level`、フロントエンドは `src/services/logForwarder.ts` の `setupLogging`)。
+- レベル: デバッグ版 (`npm run tauri:dev`) はデバッグ以上、リリース版 (`npm run tauri:build`) は情報 (最低限)、警告、エラーを出します。判定はログの初期化の中でします (Rust は `src-tauri/src/logging.rs` の `default_level`、フロントエンドは `src/services/logForwarder.ts` の `setupLogging`)。
 - レベルを変えるとき: `RUST_LOG=debug npm run tauri:dev` のように、環境変数 `RUST_LOG` で上書きします (リリース版でも効きます)。
-- ログは、Rust は `log::debug!` / `info!` / `warn!` / `error!`、フロントエンドは `loglevel` の `log.debug` / `info` / `warn` / `error` を使います。パスワードなどの秘密は書きません。
+- ログを書くには、Rust では `log::debug!` / `info!` / `warn!` / `error!` を、フロントエンドでは `loglevel` の `log.debug` / `info` / `warn` / `error` を使います。パスワードなどの秘密は書きません。
 
 ## 構成
 

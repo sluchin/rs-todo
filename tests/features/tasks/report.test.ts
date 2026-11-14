@@ -119,7 +119,7 @@ describe("buildDailyReport", () => {
       /## 明日以降の予定 \(2\)\n- \[ \] 明日の予定 .*\n- \[ \] 先の予定 /,
     );
     expect(report).not.toContain("期限なし");
-    // 今日の予定に出したものは、期限切れには重ねて出さない.
+    // 今日の予定に出したものは, 期限切れには重ねて出さない.
     expect(report.match(/遅れだが今日の予定/g)).toHaveLength(1);
   });
 

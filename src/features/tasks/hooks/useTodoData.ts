@@ -42,7 +42,7 @@ export function useTodoData(): TodoStore {
     );
   }, [data, loaded]);
 
-  /** 変更を記録して, 保存の対象にする. */
+  /** 変更を記録して保存の対象にする. */
   const change = useCallback((fn: (d: TodoData) => TodoData) => {
     dirty.current = true;
     setData(fn);

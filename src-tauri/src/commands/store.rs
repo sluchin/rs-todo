@@ -101,7 +101,7 @@ pub struct TodoData {
 ///
 /// # Arguments
 ///
-/// * `override_dir` - 環境変数 `RSTODO_DATA_DIR` の値. 指定されていれば, その下を使う.
+/// * `override_dir` - 環境変数 `RSTODO_DATA_DIR` の値. 指定されていればその下を使う.
 /// * `data_dir` - OS 標準のデータディレクトリ.
 ///
 /// # Returns

@@ -119,18 +119,18 @@ describe("App", () => {
 
   it("正常系: 完了日は未完了でも出る。完了にすると空なら入り、解除しても残る。入っていれば上書きしない", async () => {
     const user = await renderApp();
-    // 「済んだこと」は完了日が入っている。解除しても、完了日はそのまま。
+    // 「済んだこと」は完了日が入っている. 解除しても完了日はそのまま.
     await user.click(
       await screen.findByRole("button", { name: "未完了に戻す" }),
     );
     await user.click(screen.getByText("済んだこと"));
     expect(screen.getByLabelText("完了日")).toHaveValue("2026-01-03T09:30");
 
-    // もう一度完了にしても、入っている完了日は変わらない。
+    // もう一度完了にしても, 入っている完了日は変わらない.
     await user.click(screen.getByRole("button", { name: "完了にする" }));
     expect(screen.getByLabelText("完了日")).toHaveValue("2026-01-03T09:30");
 
-    // 完了日を空にして、解除して、完了にすると、現在の日時が入る。
+    // 完了日を空にしてから解除して完了にすると, 現在の日時が入る.
     fireEvent.change(screen.getByLabelText("完了日"), {
       target: { value: "" },
     });
@@ -470,7 +470,7 @@ describe("App", () => {
     const user = await renderApp();
     await user.click(await screen.findByText("済んだこと"));
 
-    // fireEvent は、既定の動作が取り消されなかったときだけ true を返す.
+    // fireEvent は, 既定の動作が取り消されなかったときだけ true を返す.
     expect(fireEvent.contextMenu(screen.getByText("済んだこと"))).toBe(false);
     expect(fireEvent.contextMenu(screen.getByRole("main"))).toBe(false);
     expect(fireEvent.contextMenu(screen.getByLabelText("タスクを追加"))).toBe(
